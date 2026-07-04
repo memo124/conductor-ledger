@@ -1,60 +1,115 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ConductorLedger
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema web para que conductores de plataformas (InDrive, etc.) lleven el control financiero de sus viajes, gastos y vehículos. Desarrollado con **Laravel 12** y **PostgreSQL**.
 
-## About Laravel
+## ¿Qué hace?
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Registra **viajes** con ingresos por plataforma, propinas y costo de alquiler del vehículo.
+- Registra **gastos** por categoría (gasolina, mantenimiento, etc.).
+- Administra **vehículos** con tipo de propiedad (propio, alquilado, financiado).
+- Muestra un **dashboard** con resumen del mes y comparativa mensual.
+- Genera **gráficos** anuales de ingresos, gastos y ganancia neta.
+- **Exporta** viajes, gastos y resumen en CSV o PDF.
+- Gestión de **usuarios** (solo administradores) con roles `admin` y `user`.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requisitos
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Componente | Versión mínima |
+|------------|----------------|
+| PHP        | 8.2            |
+| PostgreSQL | 14+            |
+| Composer   | 2.x            |
+| Node.js    | 18+ (opcional, para Vite) |
 
-## Learning Laravel
+## Instalación rápida
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```bash
+# 1. Clonar e instalar dependencias
+composer install
+cp .env.example .env
+php artisan key:generate
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# 2. Configurar PostgreSQL en .env
+# DB_CONNECTION=pgsql
+# DB_HOST=127.0.0.1
+# DB_PORT=5432
+# DB_DATABASE=conductor_ledger
+# DB_USERNAME=postgres
+# DB_PASSWORD=tu_password
 
-## Laravel Sponsors
+# 3. Migrar y sembrar datos
+php artisan migrate
+php artisan db:seed
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+# 4. Servir la aplicación
+php artisan serve
+```
 
-### Premium Partners
+Accede a `http://localhost:8000` (o la URL configurada en `APP_URL`).
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Usuarios de prueba
 
-## Contributing
+| Rol         | Email                              | Contraseña   |
+|-------------|------------------------------------|--------------|
+| Conductor   | `conductor@conductorledger.local`  | `password123` |
+| Administrador | `admin@conductorledger.local`    | `admin123`   |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Estructura del proyecto
 
-## Code of Conduct
+```
+conductor-ledger/
+├── app/
+│   ├── Http/Controllers/     # Controladores (lógica de cada módulo)
+│   ├── Http/Middleware/      # Middleware (ej. EnsureAdmin)
+│   ├── Models/               # Modelos Eloquent
+│   ├── Services/             # Lógica de negocio reutilizable
+│   └── Support/              # Utilidades (Select2Response)
+├── public/js/
+│   ├── config/               # Rutas API centralizadas
+│   ├── common/               # Utilidades JS compartidas
+│   ├── auth/                 # Login, recuperación de contraseña
+│   ├── viajes/               # Módulo de viajes
+│   ├── gastos/               # Módulo de gastos
+│   └── ...                   # Un archivo index.js por vista
+├── resources/views/            # Plantillas Blade
+├── routes/web.php            # Definición de rutas
+└── docs/                     # Documentación detallada
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Stack tecnológico
 
-## Security Vulnerabilities
+**Backend:** Laravel 12, PostgreSQL (tablas particionadas por año), DomPDF para exportaciones.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+**Frontend:** jQuery, Bootstrap 5, DataTables (server-side), Select2 (paginado), Chart.js (gráficos).
 
-## License
+**Patrón:** Las vistas Blade cargan JS específico por módulo. Todas las peticiones AJAX usan `APLICATIVO_API` (`public/js/config/api_endpoints.js`) y el namespace global `ConductorLedger` para utilidades comunes.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# conductor-ledger
+## Documentación
+
+| Documento | Contenido |
+|-----------|-----------|
+| [docs/API.md](docs/API.md) | Rutas, controladores y métodos del backend |
+| [docs/JAVASCRIPT.md](docs/JAVASCRIPT.md) | Módulos JS, funciones y flujos de cada pantalla |
+| [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) | Modelos, servicios, base de datos y middleware |
+| [docs/RUTAS.md](docs/RUTAS.md) | Referencia rápida de todas las rutas HTTP |
+
+## Conceptos clave del negocio
+
+**Ganancia neta de un viaje:**
+```
+Ingresos = InDrive + Otros viajes + Propina
+Neto     = Ingresos − Alquiler
+```
+
+**Ganancia neta del mes (dashboard):**
+```
+Neto = Ingresos totales − Alquiler total − Gastos totales
+```
+
+**Vehículos ALQUILADO:** tienen cuota configurable (diaria, semanal o mensual). Al registrar un viaje, el sistema sugiere el alquiler prorrateado según el periodo.
+
+**Numeración:** Cada usuario tiene contadores anuales independientes para viajes (`trip_number`) y gastos (`expense_number`).
+
+## Licencia
+
+MIT
