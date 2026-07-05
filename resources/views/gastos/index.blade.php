@@ -37,7 +37,7 @@
 </div>
 
 <div class="modal fade" id="modalNuevoGasto" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down">
         <div class="modal-content cl-modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Registrar Gasto</h5>
@@ -78,6 +78,5 @@
 
 @push('scripts')
 <script src="{{ asset('js/common/select2-paginated.js') }}"></script>
-<script src="{{ asset('js/common/datatables-config.js') }}"></script>
 <script src="{{ asset('js/gastos/index.js') }}"></script>
 @endpush

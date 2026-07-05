@@ -30,10 +30,24 @@
 </head>
 <body class="cl-body" @auth data-user-theme="{{ auth()->user()->theme_preference ?? 'auto' }}" @endauth>
     @auth
-    <nav class="cl-sidebar">
+    <div class="cl-sidebar-overlay" id="clSidebarOverlay" aria-hidden="true"></div>
+
+    <header class="cl-mobile-header">
+        <button type="button" class="cl-sidebar-toggle" id="btnSidebarToggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="clSidebar">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <span class="cl-mobile-brand">
+            <i class="fa-solid fa-chart-line"></i> ConductorLedger
+        </span>
+    </header>
+
+    <nav class="cl-sidebar" id="clSidebar" aria-hidden="true">
         <div class="cl-brand">
             <i class="fa-solid fa-chart-line cl-brand-icon"></i>
             <span>ConductorLedger</span>
+            <button type="button" class="cl-sidebar-close" id="btnSidebarClose" aria-label="Cerrar menú">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
         <ul class="cl-nav">
             <li><a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
@@ -75,11 +89,13 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script src="{{ asset('js/common/datatables-config.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="{{ asset('js/config/api_endpoints.js') }}"></script>
     <script src="{{ asset('js/common/alerts.js') }}"></script>
     <script src="{{ asset('js/common/theme.js') }}"></script>
     @auth
+    <script src="{{ asset('js/common/sidebar.js') }}"></script>
     <script src="{{ asset('js/common/logout.js') }}"></script>
     @endauth
     @stack('scripts')

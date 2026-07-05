@@ -414,3 +414,291 @@ table.dataTable tbody tr:hover > * {
     background: var(--cl-danger);
     color: #fff;
 }
+
+/* ── Mobile header & sidebar toggle ── */
+
+.cl-mobile-header {
+    display: none;
+}
+
+.cl-sidebar-overlay {
+    display: none;
+}
+
+.cl-sidebar-close {
+    display: none;
+}
+
+.cl-sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid var(--cl-border);
+    border-radius: 8px;
+    background: var(--cl-bg-card);
+    color: var(--cl-text);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.cl-sidebar-toggle:hover {
+    background: var(--cl-bg-card-hover);
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 991.98px) {
+    .cl-mobile-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        position: sticky;
+        top: 0;
+        z-index: 900;
+        padding: 0.75rem 1rem;
+        background: var(--cl-bg-card);
+        border-bottom: 1px solid var(--cl-border);
+    }
+
+    .cl-mobile-brand {
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--cl-accent);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .cl-sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.25s, visibility 0.25s;
+    }
+
+    body.cl-sidebar-open .cl-sidebar-overlay {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .cl-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        z-index: 1050;
+        box-shadow: 4px 0 24px var(--cl-shadow);
+    }
+
+    body.cl-sidebar-open .cl-sidebar {
+        transform: translateX(0);
+    }
+
+    body.cl-sidebar-open {
+        overflow: hidden;
+    }
+
+    .cl-sidebar-close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+        width: 2rem;
+        height: 2rem;
+        padding: 0;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--cl-text-muted);
+        cursor: pointer;
+    }
+
+    .cl-sidebar-close:hover {
+        background: rgba(59, 130, 246, 0.08);
+        color: var(--cl-text);
+    }
+
+    .cl-main {
+        margin-left: 0;
+        padding: 1rem;
+    }
+
+    .cl-page-header h1 {
+        font-size: 1.35rem;
+    }
+
+    .cl-page-header.d-flex {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    .cl-page-header.d-flex > .d-flex,
+    .cl-page-header.d-flex > .btn-group,
+    .cl-page-header.d-flex > .btn,
+    .cl-page-header.d-flex > .form-select {
+        width: 100%;
+    }
+
+    .cl-page-header.d-flex > .d-flex {
+        flex-direction: column;
+    }
+
+    .cl-page-header .btn-group {
+        display: flex;
+    }
+
+    .cl-page-header .btn-group .btn,
+    .cl-page-header .btn {
+        flex: 1;
+    }
+
+    .cl-stat-value {
+        font-size: 1.4rem;
+    }
+
+    .cl-card {
+        padding: 1rem;
+    }
+
+    .cl-login-card {
+        margin: 1rem;
+        padding: 1.75rem 1.25rem;
+    }
+
+    .cl-alert-container {
+        left: 1rem;
+        right: 1rem;
+        min-width: 0;
+    }
+
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        text-align: left !important;
+        margin-bottom: 0.5rem;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-top: 0.25rem;
+    }
+
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        text-align: center !important;
+        margin-top: 0.5rem;
+    }
+
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .cl-main {
+        padding: 0.75rem;
+    }
+
+    .cl-page-header h1 {
+        font-size: 1.2rem;
+    }
+
+    .cl-stat-value {
+        font-size: 1.25rem;
+    }
+}
+
+/* ── DataTables: tarjetas en móvil ── */
+
+@media (max-width: 767.98px) {
+    .cl-card .table-responsive,
+    .dataTables_wrapper {
+        overflow-x: hidden;
+    }
+
+    table.dataTable.cl-dt-mobile-cards {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100%;
+        border-collapse: separate !important;
+    }
+
+    table.dataTable.cl-dt-mobile-cards thead {
+        display: none !important;
+    }
+
+    table.dataTable.cl-dt-mobile-cards tbody {
+        display: block;
+    }
+
+    table.dataTable.cl-dt-mobile-cards tbody tr {
+        display: block;
+        background: var(--cl-bg-card);
+        border: 1px solid var(--cl-border);
+        border-radius: 10px;
+        margin-bottom: 0.75rem;
+        padding: 0.65rem 0.85rem;
+        box-shadow: 0 1px 3px var(--cl-shadow);
+    }
+
+    table.dataTable.cl-dt-mobile-cards tbody tr.child,
+    table.dataTable.cl-dt-mobile-cards tbody tr.dtrg-group {
+        display: none !important;
+    }
+
+    table.dataTable.cl-dt-mobile-cards tbody td {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.75rem;
+        width: 100% !important;
+        padding: 0.4rem 0 !important;
+        border: none !important;
+        background: transparent !important;
+        text-align: right !important;
+        white-space: normal !important;
+        word-break: break-word;
+    }
+
+    table.dataTable.cl-dt-mobile-cards tbody td::before {
+        content: attr(data-label);
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--cl-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        text-align: left;
+        flex: 0 0 auto;
+        max-width: 45%;
+    }
+
+    table.dataTable.cl-dt-mobile-cards tbody td:first-child {
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding-bottom: 0.5rem !important;
+        margin-bottom: 0.25rem;
+        border-bottom: 1px solid var(--cl-border) !important;
+    }
+
+    table.dataTable.cl-dt-mobile-cards tbody td:first-child::before {
+        font-size: 0.72rem;
+    }
+
+    table.dataTable.cl-dt-mobile-cards tbody td.dtr-control {
+        display: none !important;
+    }
+
+    .dataTables_wrapper .dataTables_scrollBody,
+    .dataTables_wrapper .dataTables_scroll {
+        overflow-x: hidden !important;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        max-width: 100%;
+        box-sizing: border-box;
+    }

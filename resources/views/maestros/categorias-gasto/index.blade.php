@@ -14,9 +14,11 @@
 </div>
 
 <div class="cl-card">
-    <table id="tblMaestro" class="table table-striped w-100">
-        <thead><tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr></thead>
-    </table>
+    <div class="table-responsive">
+        <table id="tblMaestro" class="table table-striped w-100">
+            <thead><tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr></thead>
+        </table>
+    </div>
 </div>
 
 <div class="modal fade" id="modalNuevo" tabindex="-1">
@@ -42,6 +44,5 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/common/datatables-config.js') }}"></script>
 <script src="{{ asset('js/maestros/categorias-gasto.js') }}"></script>
 @endpush

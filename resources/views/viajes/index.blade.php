@@ -41,7 +41,7 @@
 </div>
 
 <div class="modal fade" id="modalNuevoViaje" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down">
         <div class="modal-content cl-modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Registrar Viaje</h5>
@@ -58,19 +58,19 @@
                         <input type="date" name="fecha" class="form-control" value="{{ date('Y-m-d') }}" required>
                     </div>
                     <div class="row">
-                        <div class="col-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label class="form-label text-income">InDrive ($)</label>
                             <input type="number" step="0.01" min="0" name="indrive" class="form-control" value="0" required>
                         </div>
-                        <div class="col-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label class="form-label text-income">Otros Viajes ($)</label>
                             <input type="number" step="0.01" min="0" name="otros_viajes" class="form-control" value="0" required>
                         </div>
-                        <div class="col-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label class="form-label text-income">Propina ($)</label>
                             <input type="number" step="0.01" min="0" name="propina" class="form-control" value="0" required>
                         </div>
-                        <div class="col-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label class="form-label text-expense">Alquiler ($)</label>
                             <input type="number" step="0.01" min="0" name="alquiler" class="form-control" value="0" readonly required>
                             <small id="rentalSuggestion" class="text-muted d-block mt-1"></small>
@@ -89,6 +89,5 @@
 
 @push('scripts')
 <script src="{{ asset('js/common/select2-paginated.js') }}"></script>
-<script src="{{ asset('js/common/datatables-config.js') }}"></script>
 <script src="{{ asset('js/viajes/index.js') }}"></script>
 @endpush

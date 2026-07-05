@@ -32,7 +32,7 @@
 </div>
 
 <div class="modal fade" id="modalUsuario" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down">
         <div class="modal-content cl-modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalUsuarioTitle">Nuevo Usuario</h5>
@@ -59,14 +59,14 @@
                         <small class="text-muted" id="passwordHint">Obligatoria al crear usuario.</small>
                     </div>
                     <div class="row">
-                        <div class="col-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label class="form-label">Rol</label>
                             <select name="role" class="form-select" required>
                                 <option value="user">Conductor</option>
                                 <option value="admin">Administrador</option>
                             </select>
                         </div>
-                        <div class="col-6 mb-3">
+                        <div class="col-12 col-md-6 mb-3">
                             <label class="form-label">Estado</label>
                             <select name="is_active" class="form-select" required>
                                 <option value="1">Activo</option>
@@ -86,6 +86,5 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/common/datatables-config.js') }}"></script>
 <script src="{{ asset('js/usuarios/index.js') }}"></script>
 @endpush

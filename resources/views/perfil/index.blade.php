@@ -9,7 +9,7 @@
 </div>
 
 <div class="row g-3">
-    <div class="col-lg-6">
+    <div class="col-12 col-lg-6">
         <div class="cl-card">
             <div class="cl-card-title">Datos personales</div>
             <form id="formPerfil">
@@ -37,7 +37,7 @@
             </form>
         </div>
     </div>
-    <div class="col-lg-6">
+    <div class="col-12 col-lg-6">
         <div class="cl-card">
             <div class="cl-card-title">Cambiar contraseña</div>
             <form id="formPassword">
