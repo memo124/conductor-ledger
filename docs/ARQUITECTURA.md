@@ -34,11 +34,11 @@ flowchart TB
 | Rol | Acceso |
 |-----|--------|
 | `user` (conductor) | Dashboard, viajes, gastos, vehículos, gráficos, maestros, perfil, exportaciones. Solo ve **sus** datos. |
-| `admin` | Todo lo anterior + gestión de usuarios (`/Usuarios/*`). |
+| `admin` | Todo lo anterior + administración (usuarios, respaldos, descifrado emergencia). |
 
-El middleware `EnsureAdmin` (`app/Http/Middleware/EnsureAdmin.php`) verifica `$request->user()->isAdmin()`.
+**RBAC (v1.0+):** permisos granulares por opción de menú (`app_options` → `role_permissions`). Middleware `permission:{slug}` en rutas. Ver [SEGURIDAD.md](SEGURIDAD.md).
 
-Registrado como alias `admin` en `bootstrap/app.php`.
+El middleware legacy `EnsureAdmin` (`admin`) sigue disponible; las rutas nuevas usan `permission`.
 
 ---
 

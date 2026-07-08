@@ -1,15 +1,17 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "conductor-ledger/app",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Sistema financiero para conductores de plataformas (viajes, gastos, vehículos).",
+    "version": "1.0.0",
+    "keywords": ["laravel", "conductor", "finanzas", "postgresql", "ledger"],
     "license": "MIT",
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1"
+        "laravel/tinker": "^2.10.1",
+        "resend/resend-php": "^1.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

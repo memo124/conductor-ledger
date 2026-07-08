@@ -61,11 +61,15 @@
             <li class="cl-nav-divider">Cuenta</li>
             <li><a href="{{ route('perfil.index') }}" class="{{ request()->routeIs('perfil.*') ? 'active' : '' }}"><i class="fa-solid fa-user"></i> Mi Perfil</a></li>
             @if(auth()->user()->isAdmin())
+            <li class="cl-nav-divider">Administración</li>
             <li><a href="{{ route('usuarios.index') }}" class="{{ request()->routeIs('usuarios.*') ? 'active' : '' }}"><i class="fa-solid fa-users-gear"></i> Usuarios</a></li>
+            <li><a href="{{ route('admin.backups.index') }}" class="{{ request()->routeIs('admin.backups.*') ? 'active' : '' }}"><i class="fa-solid fa-database"></i> Respaldos</a></li>
+            <li><a href="{{ route('admin.emergency-decrypt.index') }}" class="{{ request()->routeIs('admin.emergency-decrypt.*') ? 'active' : '' }}"><i class="fa-solid fa-unlock-keyhole"></i> Descifrado emergencia</a></li>
             @endif
         </ul>
         <div class="cl-sidebar-footer">
             <span class="cl-user-name">{{ auth()->user()->name }}</span>
+            <small class="text-muted d-block mt-1">v{{ config('conductor-ledger.version') }}</small>
             <div class="cl-theme-picker mt-2">
                 <label for="selectThemePreference" class="form-label mb-1">Tema</label>
                 <select id="selectThemePreference" class="form-select form-select-sm">

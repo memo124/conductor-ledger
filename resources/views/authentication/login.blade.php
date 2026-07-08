@@ -30,6 +30,8 @@
 
     <div class="text-center mt-3">
         <a href="{{ route('password.request') }}">¿Olvidaste tu contraseña?</a>
+        <span class="mx-1">·</span>
+        <a href="{{ route('register') }}">Crear cuenta</a>
     </div>
 
     <div class="cl-theme-picker mt-3">

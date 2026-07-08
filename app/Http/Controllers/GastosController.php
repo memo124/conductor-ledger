@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Vehicle;
+use App\Services\FinancialRecordService;
 use App\Services\YearlyCounterService;
 use App\Support\Select2Response;
 use Carbon\Carbon;
@@ -17,7 +18,10 @@ use Illuminate\View\View;
 
 class GastosController extends Controller
 {
-    public function __construct(private readonly YearlyCounterService $counterService) {}
+    public function __construct(
+        private readonly YearlyCounterService $counterService,
+        private readonly FinancialRecordService $financialRecords,
+    ) {}
 
     public function index(): View
     {
@@ -91,8 +95,10 @@ class GastosController extends Controller
                 'anio' => $anio,
                 'expense_number' => $expenseNumber,
                 'fecha' => $fecha->toDateString(),
-                'monto' => $validated['monto'],
-                'descripcion' => $validated['descripcion'] ?? null,
+                ...$this->financialRecords->encryptExpensePayload([
+                    'monto' => $validated['monto'],
+                    'descripcion' => $validated['descripcion'] ?? null,
+                ]),
             ]);
         });
 
@@ -152,14 +158,18 @@ class GastosController extends Controller
             ->limit($length)
             ->get();
 
-        $data = $rows->map(fn ($row) => [
-            'expense_number' => $row->expense_number,
-            'fecha' => $row->fecha,
-            'categoria' => $row->categoria,
-            'vehicle' => $row->plate_number ?? '—',
-            'monto' => number_format((float) $row->monto, 2),
-            'descripcion' => $row->descripcion ?? '—',
-        ]);
+        $data = $rows->map(function ($row) {
+            $amounts = $this->financialRecords->decryptExpenseRow($row);
+
+            return [
+                'expense_number' => $row->expense_number,
+                'fecha' => $row->fecha,
+                'categoria' => $row->categoria,
+                'vehicle' => $row->plate_number ?? '—',
+                'monto' => number_format($amounts['monto'], 2),
+                'descripcion' => $amounts['descripcion'] ?? '—',
+            ];
+        });
 
         return response()->json([
             'draw' => $draw,

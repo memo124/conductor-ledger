@@ -2,7 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\FormalNotificationData;
+use App\Models\Role;
 use App\Models\User;
+use App\Services\EncryptionService;
+use App\Services\NotificationService;
+use App\Services\PermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +17,12 @@ use Illuminate\View\View;
 
 class UsuariosController extends Controller
 {
+    public function __construct(
+        private readonly EncryptionService $encryption,
+        private readonly NotificationService $notifications,
+        private readonly PermissionService $permissions,
+    ) {}
+
     public function index(): View
     {
         return view('usuarios.index');
@@ -43,8 +54,8 @@ class UsuariosController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'dui' => $user->dui,
-            'role' => $user->role === 'admin' ? 'Administrador' : 'Conductor',
-            'role_code' => $user->role,
+            'role' => $user->isAdmin() ? 'Administrador' : 'Conductor',
+            'role_code' => $user->isAdmin() ? 'admin' : 'user',
             'is_active' => $user->is_active ? 'Activo' : 'Inactivo',
             'is_active_bool' => $user->is_active,
             'is_self' => $user->id === Auth::id(),
@@ -60,6 +71,8 @@ class UsuariosController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $this->normalizeBooleanFields($request, ['is_active']);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
@@ -67,13 +80,26 @@ class UsuariosController extends Controller
             'password' => ['required', 'string', 'min:8'],
             'role' => ['required', 'in:admin,user'],
             'is_active' => ['required', 'boolean'],
-        ]);
+        ], $this->validationMessages());
+
+        $keys = $this->encryption->createUserKeyEnvelope($validated['password']);
 
         $user = User::query()->create([
-            ...$validated,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'dui' => $validated['dui'],
             'password' => Hash::make($validated['password']),
+            'is_active' => $validated['is_active'],
+            'role' => $validated['role'],
             'theme_preference' => 'auto',
+            'email_verified_at' => now(),
+            'encrypted_dek' => $keys['encrypted_dek'],
+            'admin_wrapped_dek' => $keys['admin_wrapped_dek'],
+            'dek_salt' => $keys['dek_salt'],
+            'kdf_params' => $keys['kdf_params'],
         ]);
+
+        $this->syncUserRole($user, $validated['role']);
 
         return response()->json([
             'success' => true,
@@ -85,6 +111,9 @@ class UsuariosController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $user = User::query()->findOrFail($id);
+        $wasActive = $user->is_active;
+
+        $this->normalizeBooleanFields($request, ['is_active']);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -93,7 +122,7 @@ class UsuariosController extends Controller
             'password' => ['nullable', 'string', 'min:8'],
             'role' => ['required', 'in:admin,user'],
             'is_active' => ['required', 'boolean'],
-        ]);
+        ], $this->validationMessages());
 
         if ($user->id === Auth::id() && $validated['role'] !== 'admin') {
             return response()->json([
@@ -113,9 +142,36 @@ class UsuariosController extends Controller
 
         if (! empty($validated['password'])) {
             $payload['password'] = Hash::make($validated['password']);
+
+            if ($user->encrypted_dek && $user->admin_wrapped_dek) {
+                $dek = $this->encryption->unwrapUserDekWithMasterKey($user);
+                $payload = array_merge($payload, $this->encryption->rewrapUserDek($user, $dek, $validated['password']));
+            } else {
+                $keys = $this->encryption->createUserKeyEnvelope($validated['password']);
+                $payload = array_merge($payload, [
+                    'encrypted_dek' => $keys['encrypted_dek'],
+                    'admin_wrapped_dek' => $keys['admin_wrapped_dek'],
+                    'dek_salt' => $keys['dek_salt'],
+                    'kdf_params' => $keys['kdf_params'],
+                ]);
+            }
         }
 
         $user->update($payload);
+        $this->syncUserRole($user, $validated['role']);
+        $this->permissions->clearCacheForUser($user->id);
+
+        if (! $wasActive && $validated['is_active']) {
+            $this->notifications->sendFormal($user->email, new FormalNotificationData(
+                subject: 'Cuenta activada — '.config('app.name'),
+                recipientName: $user->name,
+                headline: 'Su cuenta ha sido activada',
+                message: 'Ya puede iniciar sesión en ConductorLedger.',
+                eventAt: now(),
+                actionUrl: route('login'),
+                actionLabel: 'Iniciar sesión',
+            ));
+        }
 
         return response()->json([
             'success' => true,
@@ -140,5 +196,50 @@ class UsuariosController extends Controller
             'success' => true,
             'message' => 'Usuario eliminado correctamente.',
         ]);
+    }
+
+    private function syncUserRole(User $user, string $legacyRole): void
+    {
+        $slug = $legacyRole === 'admin' ? 'administrador' : 'conductor';
+        $role = Role::query()->where('slug', $slug)->first();
+
+        if ($role) {
+            $user->roles()->sync([$role->id]);
+        }
+    }
+
+    private function normalizeBooleanFields(Request $request, array $fields): void
+    {
+        foreach ($fields as $field) {
+            if (! $request->has($field)) {
+                continue;
+            }
+
+            $value = $request->input($field);
+
+            if (is_bool($value)) {
+                $request->merge([$field => $value ? '1' : '0']);
+            } elseif (in_array($value, ['true', 'false'], true)) {
+                $request->merge([$field => $value === 'true' ? '1' : '0']);
+            }
+        }
+    }
+
+    private function validationMessages(): array
+    {
+        return [
+            'name.required' => 'El nombre es obligatorio.',
+            'email.required' => 'El correo es obligatorio.',
+            'email.email' => 'Ingrese un correo válido.',
+            'email.unique' => 'Este correo ya está registrado.',
+            'dui.required' => 'El DUI es obligatorio.',
+            'dui.unique' => 'Este DUI ya está registrado.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'role.required' => 'Seleccione un rol.',
+            'role.in' => 'El rol seleccionado no es válido.',
+            'is_active.required' => 'Seleccione el estado del usuario.',
+            'is_active.boolean' => 'El estado debe ser Activo o Inactivo.',
+        ];
     }
 }

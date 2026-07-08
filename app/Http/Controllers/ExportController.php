@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\FinancialRecordService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -11,6 +12,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportController extends Controller
 {
+    public function __construct(private readonly FinancialRecordService $financialRecords) {}
+
     public function viajes(Request $request): Response|StreamedResponse
     {
         $format = $request->query('format', 'csv');
@@ -26,18 +29,19 @@ class ExportController extends Controller
 
         $headers = ['#', 'Fecha', 'Día', 'InDrive', 'Otros', 'Propina', 'Alquiler', 'Ingresos', 'Neto'];
         $data = $rows->map(function ($row) {
-            $ingresos = (float) $row->indrive + (float) $row->otros_viajes + (float) $row->propina;
+            $amounts = $this->financialRecords->decryptTripRow($row);
+            $ingresos = $amounts['indrive'] + $amounts['otros_viajes'] + $amounts['propina'];
 
             return [
                 $row->trip_number,
                 $row->fecha,
                 $row->dia_semana,
-                number_format((float) $row->indrive, 2, '.', ''),
-                number_format((float) $row->otros_viajes, 2, '.', ''),
-                number_format((float) $row->propina, 2, '.', ''),
-                number_format((float) $row->alquiler, 2, '.', ''),
+                number_format($amounts['indrive'], 2, '.', ''),
+                number_format($amounts['otros_viajes'], 2, '.', ''),
+                number_format($amounts['propina'], 2, '.', ''),
+                number_format($amounts['alquiler'], 2, '.', ''),
                 number_format($ingresos, 2, '.', ''),
-                number_format($ingresos - (float) $row->alquiler, 2, '.', ''),
+                number_format($ingresos - $amounts['alquiler'], 2, '.', ''),
             ];
         })->all();
 
@@ -72,13 +76,17 @@ class ExportController extends Controller
             ->get();
 
         $headers = ['#', 'Fecha', 'Categoría', 'Monto', 'Descripción'];
-        $data = $rows->map(fn ($row) => [
-            $row->expense_number,
-            $row->fecha,
-            $row->category_name,
-            number_format((float) $row->monto, 2, '.', ''),
-            $row->descripcion,
-        ])->all();
+        $data = $rows->map(function ($row) {
+            $amounts = $this->financialRecords->decryptExpenseRow($row);
+
+            return [
+                $row->expense_number,
+                $row->fecha,
+                $row->category_name,
+                number_format($amounts['monto'], 2, '.', ''),
+                $amounts['descripcion'],
+            ];
+        })->all();
 
         $filename = "gastos_{$anio}";
 
@@ -102,13 +110,10 @@ class ExportController extends Controller
         $userId = Auth::id();
         $anio = (int) $request->query('anio', date('Y'));
 
-        $ingresos = (float) DB::table('trips')
-            ->where('user_id', $userId)
-            ->where('anio', $anio)
-            ->sum(DB::raw('indrive + otros_viajes + propina'));
-
-        $alquiler = (float) DB::table('trips')->where('user_id', $userId)->where('anio', $anio)->sum('alquiler');
-        $gastos = (float) DB::table('expenses')->where('user_id', $userId)->where('anio', $anio)->sum('monto');
+        $tripTotals = $this->financialRecords->monthlyTripTotals($userId, $anio);
+        $ingresos = $tripTotals['indrive'] + $tripTotals['otros_viajes'] + $tripTotals['propina'];
+        $alquiler = $tripTotals['alquiler'];
+        $gastos = $this->financialRecords->monthlyExpenseTotal($userId, $anio);
         $neto = $ingresos - $alquiler - $gastos;
 
         $headers = ['Concepto', 'Monto'];

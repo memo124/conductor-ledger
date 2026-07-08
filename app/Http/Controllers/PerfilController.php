@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\EncryptionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,8 @@ use Illuminate\View\View;
 
 class PerfilController extends Controller
 {
+    public function __construct(private readonly EncryptionService $encryption) {}
+
     public function index(): View
     {
         return view('perfil.index', ['user' => Auth::user()]);
@@ -44,6 +47,7 @@ class PerfilController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
+        /** @var User $user */
         $user = Auth::user();
 
         if (! Hash::check($validated['current_password'], $user->password)) {
@@ -53,7 +57,15 @@ class PerfilController extends Controller
             ], 422);
         }
 
-        $user->update(['password' => Hash::make($validated['password'])]);
+        $payload = ['password' => Hash::make($validated['password'])];
+
+        if ($user->encrypted_dek) {
+            $dek = $this->encryption->unwrapUserDek($user, $validated['current_password']);
+            $payload = array_merge($payload, $this->encryption->rewrapUserDek($user, $dek, $validated['password']));
+            $this->encryption->storeDekInSession($request->session(), $dek);
+        }
+
+        $user->update($payload);
 
         return response()->json([
             'success' => true,

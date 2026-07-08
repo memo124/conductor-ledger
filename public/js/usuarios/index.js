@@ -75,7 +75,6 @@ $(function () {
         var data = $(this).serializeArray();
         var payload = {};
         data.forEach(function (item) { payload[item.name] = item.value; });
-        payload.is_active = payload.is_active === '1';
 
         var request = editingId
             ? $.ajax({ url: APLICATIVO_API.USUARIOS.PUT.UPDATE + '/' + editingId, method: 'PUT', data: payload })

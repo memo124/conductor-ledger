@@ -12,7 +12,15 @@ const APLICATIVO_API = {
             LOGOUT: '/Authentication/Logout',
             UPDATE_THEME: '/Authentication/UpdateThemePreference',
             FORGOT_PASSWORD: '/Authentication/ForgotPassword',
-            RESET_PASSWORD: '/Authentication/ResetPassword'
+            RESET_PASSWORD: '/Authentication/ResetPassword',
+            REGISTER: '/Registro/Store'
+        }
+    },
+    ADMIN: {
+        POST: {
+            BACKUP_GENERATE: '/Administracion/Backups/Generar',
+            BACKUP_ISSUE_LINK: '/Administracion/Backups/EnlaceDescarga',
+            EMERGENCY_DECRYPT: '/Administracion/DescifradoEmergencia/Ejecutar'
         }
     },
     PERFIL: {

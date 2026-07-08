@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Trip;
 use App\Models\Vehicle;
+use App\Services\FinancialRecordService;
 use App\Services\VehicleRentalService;
 use App\Services\YearlyCounterService;
 use App\Support\Select2Response;
@@ -20,6 +21,7 @@ class ViajesController extends Controller
     public function __construct(
         private readonly YearlyCounterService $counterService,
         private readonly VehicleRentalService $rentalService,
+        private readonly FinancialRecordService $financialRecords,
     ) {}
 
     public function index(): View
@@ -63,10 +65,12 @@ class ViajesController extends Controller
                 'trip_number' => $tripNumber,
                 'fecha' => $fecha->toDateString(),
                 'dia_semana' => $fecha->locale('es')->isoFormat('dddd'),
-                'indrive' => $validated['indrive'] ?? 0,
-                'otros_viajes' => $validated['otros_viajes'] ?? 0,
-                'propina' => $validated['propina'] ?? 0,
-                'alquiler' => $alquiler,
+                ...$this->financialRecords->encryptTripPayload([
+                    'indrive' => $validated['indrive'] ?? 0,
+                    'otros_viajes' => $validated['otros_viajes'] ?? 0,
+                    'propina' => $validated['propina'] ?? 0,
+                    'alquiler' => $alquiler,
+                ]),
             ]);
         });
 
@@ -153,18 +157,19 @@ class ViajesController extends Controller
             ->pluck('plate_number', 'id');
 
         $data = $rows->map(function ($row) use ($vehiclePlates) {
-            $ingresos = (float) $row->indrive + (float) $row->otros_viajes + (float) $row->propina;
-            $neto = $ingresos - (float) $row->alquiler;
+            $amounts = $this->financialRecords->decryptTripRow($row);
+            $ingresos = $amounts['indrive'] + $amounts['otros_viajes'] + $amounts['propina'];
+            $neto = $ingresos - $amounts['alquiler'];
 
             return [
                 'trip_number' => $row->trip_number,
                 'fecha' => $row->fecha,
                 'dia_semana' => $row->dia_semana,
                 'vehicle' => $vehiclePlates[$row->vehicle_id] ?? 'N/A',
-                'indrive' => number_format((float) $row->indrive, 2),
-                'otros_viajes' => number_format((float) $row->otros_viajes, 2),
-                'propina' => number_format((float) $row->propina, 2),
-                'alquiler' => number_format((float) $row->alquiler, 2),
+                'indrive' => number_format($amounts['indrive'], 2),
+                'otros_viajes' => number_format($amounts['otros_viajes'], 2),
+                'propina' => number_format($amounts['propina'], 2),
+                'alquiler' => number_format($amounts['alquiler'], 2),
                 'ingresos' => number_format($ingresos, 2),
                 'neto' => number_format($neto, 2),
             ];
@@ -183,19 +188,7 @@ class ViajesController extends Controller
         $userId = Auth::id();
         $anio = (int) $request->query('anio', date('Y'));
 
-        $rows = DB::table('trips')
-            ->selectRaw("
-                EXTRACT(MONTH FROM fecha)::int AS mes,
-                COALESCE(SUM(indrive), 0) AS total_indrive,
-                COALESCE(SUM(otros_viajes), 0) AS total_otros,
-                COALESCE(SUM(propina), 0) AS total_propinas,
-                COALESCE(SUM(alquiler), 0) AS total_alquiler
-            ")
-            ->where('user_id', $userId)
-            ->where('anio', $anio)
-            ->groupByRaw('EXTRACT(MONTH FROM fecha)')
-            ->orderBy('mes')
-            ->get();
+        $rows = $this->financialRecords->tripComparativaByMonth($userId, $anio);
 
         return response()->json(['success' => true, 'data' => $rows]);
     }

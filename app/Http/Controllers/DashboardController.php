@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\EncryptionService;
+use App\Services\FinancialRecordService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    public function __construct(private readonly FinancialRecordService $financialRecords) {}
+
     public function index(): View
     {
         return view('dashboard.index');
@@ -20,25 +23,11 @@ class DashboardController extends Controller
         $anio = (int) date('Y');
         $mes = (int) date('n');
 
-        $viajesMes = DB::table('trips')
-            ->where('user_id', $userId)
-            ->whereRaw('EXTRACT(YEAR FROM fecha) = ?', [$anio])
-            ->whereRaw('EXTRACT(MONTH FROM fecha) = ?', [$mes])
-            ->selectRaw('
-                COALESCE(SUM(indrive + otros_viajes + propina), 0) AS ingresos,
-                COALESCE(SUM(alquiler), 0) AS alquiler
-            ')
-            ->first();
+        $tripTotals = $this->financialRecords->monthlyTripTotals($userId, $anio, $mes);
+        $gastos = $this->financialRecords->monthlyExpenseTotal($userId, $anio, $mes);
 
-        $gastosMes = DB::table('expenses')
-            ->where('user_id', $userId)
-            ->whereRaw('EXTRACT(YEAR FROM fecha) = ?', [$anio])
-            ->whereRaw('EXTRACT(MONTH FROM fecha) = ?', [$mes])
-            ->sum('monto');
-
-        $ingresos = (float) ($viajesMes->ingresos ?? 0);
-        $alquiler = (float) ($viajesMes->alquiler ?? 0);
-        $gastos = (float) $gastosMes;
+        $ingresos = $tripTotals['indrive'] + $tripTotals['otros_viajes'] + $tripTotals['propina'];
+        $alquiler = $tripTotals['alquiler'];
         $neto = $ingresos - $alquiler - $gastos;
 
         return response()->json([

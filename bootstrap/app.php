@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo('/Dashboard');
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'permission' => \App\Http\Middleware\AuthorizeAppOption::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

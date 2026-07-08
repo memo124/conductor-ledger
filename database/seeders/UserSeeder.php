@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use App\Models\User;
+use App\Services\EncryptionService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -10,7 +12,12 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::query()->updateOrCreate(
+        $encryption = app(EncryptionService::class);
+
+        $conductorKeys = $encryption->createUserKeyEnvelope('password123');
+        $adminKeys = $encryption->createUserKeyEnvelope('admin123');
+
+        $conductor = User::query()->updateOrCreate(
             ['email' => 'conductor@conductorledger.local'],
             [
                 'name' => 'Oscar Conductor',
@@ -19,10 +26,15 @@ class UserSeeder extends Seeder
                 'is_active' => true,
                 'role' => 'user',
                 'theme_preference' => 'auto',
+                'email_verified_at' => now(),
+                'encrypted_dek' => $conductorKeys['encrypted_dek'],
+                'admin_wrapped_dek' => $conductorKeys['admin_wrapped_dek'],
+                'dek_salt' => $conductorKeys['dek_salt'],
+                'kdf_params' => $conductorKeys['kdf_params'],
             ]
         );
 
-        User::query()->updateOrCreate(
+        $admin = User::query()->updateOrCreate(
             ['email' => 'admin@conductorledger.local'],
             [
                 'name' => 'Administrador',
@@ -31,7 +43,23 @@ class UserSeeder extends Seeder
                 'is_active' => true,
                 'role' => 'admin',
                 'theme_preference' => 'auto',
+                'email_verified_at' => now(),
+                'encrypted_dek' => $adminKeys['encrypted_dek'],
+                'admin_wrapped_dek' => $adminKeys['admin_wrapped_dek'],
+                'dek_salt' => $adminKeys['dek_salt'],
+                'kdf_params' => $adminKeys['kdf_params'],
             ]
         );
+
+        $conductorRole = Role::query()->where('slug', 'conductor')->first();
+        $adminRole = Role::query()->where('slug', 'administrador')->first();
+
+        if ($conductorRole) {
+            $conductor->roles()->sync([$conductorRole->id]);
+        }
+
+        if ($adminRole) {
+            $admin->roles()->sync([$adminRole->id]);
+        }
     }
 }
