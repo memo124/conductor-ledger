@@ -11,6 +11,25 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y el p
 
 ---
 
+## [1.1.0] - 2026-07-08
+
+Correcciones críticas de cifrado, loaders globales y gestión completa de vehículos alquilados.
+
+### Added
+- **Loaders globales (overlay + botón):** módulo `public/js/common/loader.js` con `ConductorLedger.showLoader()`, `hideLoader()` y `setButtonLoading()`.
+- Integración automática con peticiones AJAX (delay 300 ms) e indicador «Procesando…» en DataTables.
+- **Edición de vehículos:** modal unificado crear/editar con botón en tabla.
+- Validación obligatoria de cuota y periodo para tipos **ALQUILADO** (cliente y servidor).
+- Flag `is_rented` en Select2 de tipos de propiedad.
+
+### Fixed
+- **Cifrado de viajes/gastos:** `encrypted_payload` y `encryption_version` agregados al `$fillable` de `Trip` y `Expense` (montos ya no se guardaban en $0).
+- **Sesión DEK:** `FinancialRecordService` usa `app('session.store')` en lugar de `session()` (SessionManager).
+- Validación `is_active` en actualización de vehículos (valores `0`/`1`).
+- Peticiones silenciosas sin loader: tema, sesión, Select2 y DataTables.
+
+---
+
 ## [1.0.0] - 2026-07-08
 
 Primera versión estable con módulo financiero completo y capa de seguridad empresarial.
@@ -53,7 +72,8 @@ Primera versión estable con módulo financiero completo y capa de seguridad emp
 - Documentación base en `docs/` (API, JavaScript, arquitectura, rutas).
 - PostgreSQL con tablas particionadas por año.
 
-[Unreleased]: https://github.com/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/

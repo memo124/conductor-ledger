@@ -73,9 +73,9 @@ Depende de `VehicleRentalService`.
 |--------|------|------|-------------|
 | `index` | `/Vehiculos` | GET | Vista de listado y modal de nuevo vehículo. |
 | `getDatatableServerSide` | `/Vehiculos/GetDatatableServerSide` | GET | DataTable de vehículos del usuario. |
-| `select2Paginated` | `/Vehiculos/Select2Paginated` | GET | Select2 de **tipos de propiedad** (no vehículos). |
-| `store` | `/Vehiculos/Store` | POST | Crea vehículo. Si el tipo no es ALQUILADO, fuerza cuota y periodo a 0/daily. |
-| `update` | `/Vehiculos/Update/{id}` | PUT | Actualiza vehículo del usuario. Incluye `is_active`. |
+| `select2Paginated` | `/Vehiculos/Select2Paginated` | GET | Select2 de **tipos de propiedad** (`is_rented` en cada opción). |
+| `store` | `/Vehiculos/Store` | POST | Crea vehículo. Si es ALQUILADO exige `rental_fee_daily` ≥ 0.01 y `rental_period`. |
+| `update` | `/Vehiculos/Update/{id}` | PUT | Actualiza vehículo (placa, tipo, cuota, periodo, `is_active`). |
 
 **Campos:** `ownership_type_id`, `plate_number`, `rental_fee_daily`, `rental_period` (`daily|weekly|monthly`), `is_active` (solo en update).
 

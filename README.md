@@ -1,6 +1,6 @@
 # ConductorLedger
 
-![Versión](https://img.shields.io/badge/versión-1.0.0-blue)
+![Versión](https://img.shields.io/badge/versión-1.1.0-blue)
 ![Laravel](https://img.shields.io/badge/Laravel-12-red)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-777)
 
@@ -18,12 +18,15 @@ Sistema web para que conductores de plataformas (InDrive, etc.) lleven el contro
 - **RBAC** con permisos granulares por módulo del menú.
 - **Cifrado** de datos financieros sensibles por usuario.
 - **Respaldos** automáticos de base de datos y notificaciones por correo (Resend).
+- **Loaders visuales** en acciones AJAX (overlay + spinner en botones).
+
 - Gestión de **usuarios** (administradores) con activación, roles y auditoría.
 
 ## Versión actual
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.1.0** | 2026-07-08 | Loaders AJAX, fix cifrado viajes/gastos, edición vehículos ALQUILADO |
 | **1.0.0** | 2026-07-08 | Seguridad, RBAC, cifrado, backups, correo, i18n ES |
 
 Historial completo: [CHANGELOG.md](CHANGELOG.md) · Política de versiones: [docs/VERSIONAMIENTO.md](docs/VERSIONAMIENTO.md)
@@ -115,7 +118,7 @@ conductor-ledger/
 ├── lang/es/                  # Validación y mensajes en español
 ├── public/js/
 │   ├── config/               # Rutas API (APLICATIVO_API)
-│   ├── common/               # DataTables, sidebar, alertas, tema
+│   ├── common/               # DataTables, loader, sidebar, alertas, tema
 │   └── {modulo}/index.js     # Un JS por pantalla
 ├── resources/views/          # Blade + emails
 ├── routes/web.php            # Rutas HTTP con middleware permission

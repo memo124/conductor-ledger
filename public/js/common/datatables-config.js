@@ -43,7 +43,8 @@ ConductorLedger.defaultDataTableOptions = ConductorLedger.chainInitComplete({
     pageLength: 10,
     lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
     language: {
-        url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json'
+        url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json',
+        processing: '<div class="cl-dt-processing"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...</div>'
     }
 });
 

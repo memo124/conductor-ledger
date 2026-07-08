@@ -23,6 +23,8 @@ class Expense extends Model
         'fecha',
         'monto',
         'descripcion',
+        'encrypted_payload',
+        'encryption_version',
     ];
 
     protected function casts(): array

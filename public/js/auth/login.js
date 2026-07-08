@@ -4,7 +4,6 @@ $(function () {
     $('#formLogin').on('submit', function (e) {
         e.preventDefault();
         var $btn = $('#btnLogin');
-        $btn.prop('disabled', true);
 
         $.ajax({
             url: APLICATIVO_API.AUTHENTICATION.POST.LOGIN,
@@ -13,7 +12,10 @@ $(function () {
                 email: $('#email').val(),
                 password: $('#password').val(),
                 remember: $('#remember').is(':checked') ? 1 : 0
-            }
+            },
+            clButton: $btn[0],
+            clLoadingText: 'Ingresando...',
+            clLoaderMessage: 'Iniciando sesión...'
         })
             .done(function (res) {
                 if (res.theme_preference) {
@@ -31,9 +33,6 @@ $(function () {
                     ? xhr.responseJSON.message
                     : 'Error al iniciar sesión.';
                 ConductorLedger.showAlert(msg, 'danger');
-            })
-            .always(function () {
-                $btn.prop('disabled', false);
             });
     });
 });

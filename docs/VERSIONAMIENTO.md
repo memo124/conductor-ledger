@@ -44,6 +44,7 @@ cat VERSION
 
 | Versión | Fecha | Resumen |
 |---------|-------|---------|
+| **1.1.0** | 2026-07-08 | Loaders AJAX, fix cifrado, edición vehículos ALQUILADO |
 | **1.0.0** | 2026-07-08 | Seguridad (RBAC, cifrado, backups, correo), registro, i18n ES |
 | **0.2.0** | 2026-07-05 | Diseño responsive móvil |
 | **0.1.0** | 2026-07-04 | Release inicial |

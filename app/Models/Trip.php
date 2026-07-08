@@ -24,6 +24,8 @@ class Trip extends Model
         'otros_viajes',
         'propina',
         'alquiler',
+        'encrypted_payload',
+        'encryption_version',
     ];
 
     protected function casts(): array

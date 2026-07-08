@@ -87,8 +87,11 @@ Tabla: `trips` (particionada por rango de `fecha`)
 | `user_id`, `anio`, `trip_number` | Clave compuesta + numeración |
 | `vehicle_id` | Vehículo usado |
 | `fecha`, `dia_semana` | Fecha y nombre del día (es) |
-| `indrive`, `otros_viajes`, `propina` | Ingresos |
-| `alquiler` | Costo de alquiler del vehículo |
+| `indrive`, `otros_viajes`, `propina`, `alquiler` | Columnas legacy (0 cuando `encryption_version = 1`) |
+| `encrypted_payload` | JSON cifrado con montos reales (v1.0+) |
+| `encryption_version` | `0` = legacy en claro, `1` = cifrado envelope |
+
+Montos visibles vía `FinancialRecordService::decryptTripRow()`. Campos de cifrado deben estar en `$fillable` del modelo.
 
 ### Expense
 
@@ -100,7 +103,8 @@ Tabla: `expenses` (particionada por rango de `fecha`)
 | `user_id`, `anio`, `expense_number` | Clave compuesta + numeración |
 | `category_id` | FK a `expense_categories` |
 | `vehicle_id` | Opcional, vehículo relacionado |
-| `fecha`, `monto`, `descripcion` | Datos del gasto |
+| `fecha`, `monto`, `descripcion` | Columnas legacy (vacías/0 con cifrado activo) |
+| `encrypted_payload`, `encryption_version` | Cifrado envelope (igual que viajes) |
 
 ### Otros modelos
 

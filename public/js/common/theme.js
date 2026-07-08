@@ -56,7 +56,12 @@ ConductorLedger.Theme = {
             && document.body.hasAttribute('data-user-theme')
             && typeof APLICATIVO_API !== 'undefined') {
             ConductorLedger.setupAjaxCsrf();
-            $.post(APLICATIVO_API.AUTHENTICATION.POST.UPDATE_THEME, { theme_preference: preference });
+            $.ajax({
+                url: APLICATIVO_API.AUTHENTICATION.POST.UPDATE_THEME,
+                method: 'POST',
+                data: { theme_preference: preference },
+                clSilent: true
+            });
         }
     },
 

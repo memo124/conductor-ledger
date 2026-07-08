@@ -5,11 +5,13 @@ El frontend usa jQuery y un namespace global `ConductorLedger`. Las rutas API es
 ## Orden de carga (layout `app.blade.php`)
 
 1. jQuery, Bootstrap, DataTables, Select2 (CDN)
-2. `js/config/api_endpoints.js` → define `window.APLICATIVO_API`
-3. `js/common/alerts.js` → utilidades CSRF y alertas
-4. `js/common/theme.js` → tema claro/oscuro/auto
-5. `js/common/logout.js` → solo si hay sesión
-6. `@stack('scripts')` → JS específico de cada vista
+2. `js/common/datatables-config.js` → opciones DataTables compartidas
+3. `js/config/api_endpoints.js` → define `window.APLICATIVO_API`
+4. `js/common/alerts.js` → utilidades CSRF y alertas
+5. `js/common/loader.js` → overlay global y spinners en botones
+6. `js/common/theme.js` → tema claro/oscuro/auto
+7. `js/common/logout.js` → solo si hay sesión
+8. `@stack('scripts')` → JS específico de cada vista
 
 ---
 
@@ -40,6 +42,21 @@ Cada módulo expone sub-objetos `GET`, `POST`, `PUT`, `DELETE` según correspond
 | `ConductorLedger.setupAjaxCsrf()` | Configura `$.ajaxSetup` con header `X-CSRF-TOKEN`. Llamar al inicio de cada módulo. |
 | `ConductorLedger.showAlert(message, type)` | Muestra alerta Bootstrap flotante. Tipos: `success`, `danger`, etc. Auto-cierra en 5 s. |
 
+### `loader.js` (v1.1+)
+
+| Función / opción AJAX | Descripción |
+|-----------------------|-------------|
+| `ConductorLedger.showLoader(message)` | Overlay de pantalla completa con spinner Bootstrap. |
+| `ConductorLedger.hideLoader()` | Oculta el overlay. |
+| `ConductorLedger.setButtonLoading($btn, true/false, text)` | Spinner en botón y deshabilita el control. |
+| `ConductorLedger.setupAjaxLoader()` | Se invoca al cargar; engancha `ajaxSend` / `ajaxComplete`. |
+| `clSilent: true` | Petición sin overlay (tema, sesión, Select2, DataTables). |
+| `clButton` | Elemento botón para spinner local. |
+| `clLoaderMessage` / `clLoadingText` | Textos personalizados de overlay y botón. |
+| `data-cl-loader` | Atributo HTML en botones sueltos (ej. generar respaldo). |
+
+Las peticiones silenciosas por URL incluyen: `Select2`, `GetDatatableServerSide`, `ActualizarSesion`, `UpdateThemePreference`, `GetRentalSuggestion`.
+
 ### `theme.js` — `ConductorLedger.Theme`
 
 | Función / propiedad | Descripción |
@@ -56,7 +73,7 @@ Cada módulo expone sub-objetos `GET`, `POST`, `PUT`, `DELETE` según correspond
 
 | Export | Descripción |
 |--------|-------------|
-| `ConductorLedger.defaultDataTableOptions` | Opciones base: server-side, responsive, paginación 10/25/50/100, idioma español (CDN). |
+| `ConductorLedger.defaultDataTableOptions` | Opciones base: server-side, processing con spinner, paginación 10/25/50/100, idioma español (CDN). |
 
 **Uso:** `$.extend(true, {}, ConductorLedger.defaultDataTableOptions, { ... })`.
 
@@ -127,10 +144,12 @@ También ejecuta keep-alive de sesión cada **5 minutos** (`ACTUALIZAR_SESION`).
 
 | Elemento / flujo | Descripción |
 |------------------|-------------|
-| `#selectOwnership` | Select2 de tipos de propiedad. |
-| `toggleRentalFields()` | Muestra/oculta `#rentalFields` si el tipo contiene "ALQUILADO". |
-| `#tblVehiculos` | DataTable server-side. |
-| `#formNuevoVehiculo` | POST store (solo creación en este JS; edición pendiente en UI). |
+| `#selectOwnership` | Select2 de tipos de propiedad (incluye `is_rented` en resultados). |
+| `toggleRentalFields()` | Muestra/oculta `#rentalFields` si el tipo es ALQUILADO; exige cuota y periodo. |
+| `#tblVehiculos` | DataTable server-side con botón editar. |
+| `#formVehiculo` | POST store o PUT update según modo (crear/editar). |
+| `#btnNuevoVehiculo` | Abre modal en modo creación. |
+| `.btn-edit` | Carga fila en modal: placa, tipo, cuota, periodo, estado. |
 
 ### `graficos/index.js`
 

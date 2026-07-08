@@ -97,6 +97,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="{{ asset('js/config/api_endpoints.js') }}"></script>
     <script src="{{ asset('js/common/alerts.js') }}"></script>
+    <script src="{{ asset('js/common/loader.js') }}"></script>
     <script src="{{ asset('js/common/theme.js') }}"></script>
     @auth
     <script src="{{ asset('js/common/sidebar.js') }}"></script>

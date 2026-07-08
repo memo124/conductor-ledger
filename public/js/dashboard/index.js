@@ -76,6 +76,10 @@ $(function () {
     cargarComparativa();
 
     setInterval(function () {
-        $.get(APLICATIVO_API.AUTHENTICATION.GET.ACTUALIZAR_SESION);
+        $.ajax({
+            url: APLICATIVO_API.AUTHENTICATION.GET.ACTUALIZAR_SESION,
+            method: 'GET',
+            clSilent: true
+        });
     }, 300000);
 });

@@ -11,7 +11,8 @@
 <div class="cl-card">
     <div class="cl-card-title">Acciones</div>
     <div class="d-flex flex-wrap gap-2">
-        <button type="button" class="btn btn-primary" id="btnGenerateBackup">
+        <button type="button" class="btn btn-primary" id="btnGenerateBackup" data-cl-loader
+            data-cl-loading-text="Generando..." data-cl-loader-message="Generando respaldo de base de datos...">
             <i class="fa-solid fa-cloud-arrow-down"></i> Generar respaldo ahora
         </button>
     </div>
@@ -25,8 +26,15 @@ $(function () {
     ConductorLedger.setupAjaxCsrf();
 
     $('#btnGenerateBackup').on('click', function () {
-        var $btn = $(this).prop('disabled', true);
-        $.post(APLICATIVO_API.ADMIN.POST.BACKUP_GENERATE)
+        var $btn = $(this);
+
+        $.ajax({
+            url: APLICATIVO_API.ADMIN.POST.BACKUP_GENERATE,
+            method: 'POST',
+            clButton: $btn[0],
+            clLoadingText: $btn.data('cl-loading-text') || 'Generando...',
+            clLoaderMessage: $btn.data('cl-loader-message') || 'Generando respaldo...'
+        })
             .done(function (res) {
                 ConductorLedger.showAlert(res.message, 'success');
                 var data = res.data;
@@ -50,9 +58,6 @@ $(function () {
             })
             .fail(function (xhr) {
                 ConductorLedger.showAlert(xhr.responseJSON?.message || 'Error al generar respaldo.', 'danger');
-            })
-            .always(function () {
-                $btn.prop('disabled', false);
             });
     });
 });

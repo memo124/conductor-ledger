@@ -245,7 +245,7 @@ class FinancialRecordService
 
     private function requireSessionDek(): string
     {
-        $dek = $this->encryption->getDekFromSession(session());
+        $dek = $this->encryption->getDekFromSession(app('session.store'));
 
         if (! $dek) {
             throw new \RuntimeException('La sesión de cifrado expiró. Vuelva a iniciar sesión.');

@@ -44,9 +44,14 @@ class VehiculosController extends Controller
             'id' => $v->id,
             'plate_number' => $v->plate_number,
             'ownership_type' => $v->ownershipType?->name,
+            'ownership_type_id' => $v->ownership_type_id,
+            'ownership_is_rented' => strtoupper($v->ownershipType?->name ?? '') === 'ALQUILADO',
             'rental_fee_daily' => number_format((float) $v->rental_fee_daily, 2),
+            'rental_fee_raw' => (float) $v->rental_fee_daily,
             'rental_period' => $periodLabels[$v->rental_period ?? 'daily'] ?? 'Diario',
+            'rental_period_code' => $v->rental_period ?? 'daily',
             'is_active' => $v->is_active ? 'Activo' : 'Inactivo',
+            'is_active_bool' => $v->is_active,
         ]);
 
         return response()->json([
@@ -70,6 +75,7 @@ class VehiculosController extends Controller
         return response()->json(Select2Response::fromPaginator($paginator, fn ($type) => [
             'id' => $type->id,
             'text' => $type->name,
+            'is_rented' => strtoupper($type->name) === 'ALQUILADO',
         ]));
     }
 
@@ -80,10 +86,18 @@ class VehiculosController extends Controller
             'plate_number' => ['required', 'string', 'max:15'],
             'rental_fee_daily' => ['nullable', 'numeric', 'min:0'],
             'rental_period' => ['nullable', 'in:daily,weekly,monthly'],
-        ]);
+        ], $this->validationMessages());
 
         $ownershipType = VehicleOwnershipType::query()->findOrFail($validated['ownership_type_id']);
         $isRented = strtoupper($ownershipType->name) === 'ALQUILADO';
+
+        if ($isRented) {
+            $request->validate([
+                'rental_fee_daily' => ['required', 'numeric', 'min:0.01'],
+                'rental_period' => ['required', 'in:daily,weekly,monthly'],
+            ], $this->validationMessages());
+            $validated = array_merge($validated, $request->only(['rental_fee_daily', 'rental_period']));
+        }
 
         $vehicle = Vehicle::query()->create([
             'user_id' => Auth::id(),
@@ -107,16 +121,26 @@ class VehiculosController extends Controller
             ->where('user_id', Auth::id())
             ->findOrFail($id);
 
+        $this->normalizeBooleanFields($request, ['is_active']);
+
         $validated = $request->validate([
             'ownership_type_id' => ['required', 'integer', 'exists:vehicle_ownership_types,id'],
             'plate_number' => ['required', 'string', 'max:15'],
             'rental_fee_daily' => ['nullable', 'numeric', 'min:0'],
             'rental_period' => ['nullable', 'in:daily,weekly,monthly'],
             'is_active' => ['required', 'boolean'],
-        ]);
+        ], $this->validationMessages());
 
         $ownershipType = VehicleOwnershipType::query()->findOrFail($validated['ownership_type_id']);
         $isRented = strtoupper($ownershipType->name) === 'ALQUILADO';
+
+        if ($isRented) {
+            $request->validate([
+                'rental_fee_daily' => ['required', 'numeric', 'min:0.01'],
+                'rental_period' => ['required', 'in:daily,weekly,monthly'],
+            ], $this->validationMessages());
+            $validated = array_merge($validated, $request->only(['rental_fee_daily', 'rental_period']));
+        }
 
         $vehicle->update([
             'ownership_type_id' => $validated['ownership_type_id'],
@@ -131,5 +155,36 @@ class VehiculosController extends Controller
             'message' => 'Vehículo actualizado.',
             'data' => $vehicle->fresh('ownershipType'),
         ]);
+    }
+
+    private function normalizeBooleanFields(Request $request, array $fields): void
+    {
+        foreach ($fields as $field) {
+            if (! $request->has($field)) {
+                continue;
+            }
+
+            $value = $request->input($field);
+
+            if (is_bool($value)) {
+                $request->merge([$field => $value ? '1' : '0']);
+            } elseif (in_array($value, ['true', 'false'], true)) {
+                $request->merge([$field => $value === 'true' ? '1' : '0']);
+            }
+        }
+    }
+
+    private function validationMessages(): array
+    {
+        return [
+            'ownership_type_id.required' => 'Seleccione el tipo de propiedad.',
+            'plate_number.required' => 'La placa es obligatoria.',
+            'rental_fee_daily.required' => 'Ingrese la cuota de alquiler.',
+            'rental_fee_daily.min' => 'La cuota de alquiler debe ser mayor a 0.',
+            'rental_period.required' => 'Seleccione el periodo de alquiler.',
+            'rental_period.in' => 'El periodo de alquiler no es válido.',
+            'is_active.required' => 'Seleccione el estado del vehículo.',
+            'is_active.boolean' => 'El estado debe ser Activo o Inactivo.',
+        ];
     }
 }

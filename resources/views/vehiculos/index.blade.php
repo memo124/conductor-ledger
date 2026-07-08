@@ -8,7 +8,7 @@
         <h1><i class="fa-solid fa-car text-primary"></i> Mis Vehículos</h1>
         <p>Gestión de flota personal</p>
     </div>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoVehiculo">
+    <button class="btn btn-primary" type="button" id="btnNuevoVehiculo">
         <i class="fa-solid fa-plus"></i> Nuevo Vehículo
     </button>
 </div>
@@ -24,20 +24,22 @@
                     <th>Cuota</th>
                     <th>Periodo</th>
                     <th>Estado</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
         </table>
     </div>
 </div>
 
-<div class="modal fade" id="modalNuevoVehiculo" tabindex="-1">
+<div class="modal fade" id="modalVehiculo" tabindex="-1">
     <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down">
         <div class="modal-content cl-modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Registrar Vehículo</h5>
+                <h5 class="modal-title" id="modalVehiculoTitle">Registrar Vehículo</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="formNuevoVehiculo">
+            <form id="formVehiculo">
+                <input type="hidden" name="vehicle_id" id="vehicleId">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Placa</label>
@@ -58,9 +60,16 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Cuota de alquiler ($)</label>
-                            <input type="number" step="0.01" min="0" name="rental_fee_daily" class="form-control" value="0">
+                            <input type="number" step="0.01" min="0.01" name="rental_fee_daily" class="form-control" value="0">
                             <small class="text-muted">Monto según el periodo seleccionado. En viajes se sugerirá la cuota diaria equivalente.</small>
                         </div>
+                    </div>
+                    <div class="mb-3" id="activeField" style="display:none;">
+                        <label class="form-label">Estado</label>
+                        <select name="is_active" class="form-select">
+                            <option value="1">Activo</option>
+                            <option value="0">Inactivo</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
