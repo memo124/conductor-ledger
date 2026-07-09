@@ -145,7 +145,7 @@ También ejecuta keep-alive de sesión cada **5 minutos** (`ACTUALIZAR_SESION`).
 | Elemento / flujo | Descripción |
 |------------------|-------------|
 | `#selectOwnership` | Select2 de tipos de propiedad (incluye `is_rented` en resultados). |
-| `toggleRentalFields()` | Muestra/oculta `#rentalFields` si el tipo es ALQUILADO; exige cuota y periodo. |
+| `toggleRentalFields()` | Muestra/oculta `#rentalFields` si el tipo es ALQUILADO; exige cuota y periodo. Al ocultar, deshabilita los inputs para evitar bloqueo por validación HTML5 en otros tipos (PROPIO, FINANCIADO, OTRO). |
 | `#tblVehiculos` | DataTable server-side con botón editar. |
 | `#formVehiculo` | POST store o PUT update según modo (crear/editar). |
 | `#btnNuevoVehiculo` | Abre modal en modo creación. |

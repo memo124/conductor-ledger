@@ -1,6 +1,6 @@
 # ConductorLedger
 
-![Versión](https://img.shields.io/badge/versión-1.1.0-blue)
+![Versión](https://img.shields.io/badge/versión-1.1.1-blue)
 ![Laravel](https://img.shields.io/badge/Laravel-12-red)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-777)
 
@@ -26,6 +26,7 @@ Sistema web para que conductores de plataformas (InDrive, etc.) lleven el contro
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.1.1** | 2026-07-08 | Fix creación vehículos (PROPIO/FINANCIADO/OTRO), correo al crear usuario |
 | **1.1.0** | 2026-07-08 | Loaders AJAX, fix cifrado viajes/gastos, edición vehículos ALQUILADO |
 | **1.0.0** | 2026-07-08 | Seguridad, RBAC, cifrado, backups, correo, i18n ES |
 
@@ -73,7 +74,7 @@ php artisan db:seed
 # 5. Servir la aplicación (solo desarrollo local)
 php artisan serve
 
-# 6. Worker de cola (correos, jobs) — terminal aparte
+# 6. Worker de cola (respaldos programados) — terminal aparte; los correos se envían al instante
 php artisan queue:work
 ```
 
@@ -94,7 +95,7 @@ Accede a `http://127.0.0.1:8000` (ajusta `APP_URL` en `.env`).
 |---------|-------------|
 | `php artisan migrate` | Ejecutar migraciones |
 | `php artisan db:seed` | Datos iniciales (roles, permisos, usuarios demo) |
-| `php artisan queue:work` | Procesar cola (correos, respaldos) |
+| `php artisan queue:work` | Procesar cola (respaldos programados) |
 | `php artisan schedule:run` | Tareas programadas (usar vía cron en producción) |
 | `php artisan encryption:migrate-legacy` | Migrar registros antiguos al esquema cifrado |
 | `php artisan test` | Ejecutar pruebas |
@@ -196,7 +197,7 @@ Neto = Ingresos totales − Alquiler total − Gastos totales
 | Aspecto | Desarrollo | Producción |
 |---------|------------|------------|
 | Servidor HTTP | `php artisan serve` | Apache/Nginx → `public/` |
-| Cola | `php artisan queue:work` | Supervisor, cron o `sync` |
+| Cola (respaldos) | `php artisan queue:work` | Supervisor, cron o `sync` |
 | Tareas programadas | Manual / cron | Cron `schedule:run` cada minuto |
 | Correo Resend | `onboarding@resend.dev` | Dominio verificado |
 | Debug | `APP_DEBUG=true` | `APP_DEBUG=false` |

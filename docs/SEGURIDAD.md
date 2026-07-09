@@ -45,8 +45,10 @@ Eventos registrados en `security_audit_logs` y log dedicado `storage/logs/securi
 ## Correo (Resend)
 
 - Plantilla formal: `resources/views/emails/formal-notification.blade.php`.
-- Cola `database`: requiere worker en producción (ver [DEPLOYMENT.md](DEPLOYMENT.md)).
-- Registro no revierte si falla el correo; se registra en log de seguridad.
+- Envío **síncrono** en la petición HTTP (registro, creación/activación de usuario, respaldos manuales).
+- Notificaciones al crear usuario desde el panel admin (`UsuariosController::store`).
+- Si falla el envío, la operación no se revierte; se registra en log de seguridad y se avisa en la respuesta JSON.
+- El worker de cola solo es necesario para jobs en background (p. ej. `DatabaseBackupJob` programado). Ver [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Variables sensibles (.env)
 

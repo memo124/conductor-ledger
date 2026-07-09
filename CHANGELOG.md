@@ -11,6 +11,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y el p
 
 ---
 
+## [1.1.1] - 2026-07-08
+
+Correcciones de creación de vehículos (todos los tipos de propiedad) y envío de correos al crear usuarios.
+
+### Fixed
+- **Creación de vehículos:** la validación HTML5 del navegador bloqueaba tipos distintos de **ALQUILADO** (campos de alquiler ocultos conservaban `min="0.01"` con valor `0`); ahora se deshabilitan al ocultar.
+- **Correo al crear usuario:** el panel de administración no enviaba notificación al nuevo usuario; ahora envía correo formal al crear y avisa en pantalla si falla el envío.
+- **Envío de correos:** las notificaciones formales se envían de forma síncrona (`Mail::send`) en lugar de encolarse, evitando falsos positivos cuando no hay worker de cola activo.
+
+### Changed
+- El worker de cola (`queue:work`) ya no es necesario para correos de notificación; sigue siendo requerido para respaldos programados (`DatabaseBackupJob`).
+
+---
+
 ## [1.1.0] - 2026-07-08
 
 Correcciones críticas de cifrado, loaders globales y gestión completa de vehículos alquilados.
@@ -72,7 +86,8 @@ Primera versión estable con módulo financiero completo y capa de seguridad emp
 - Documentación base en `docs/` (API, JavaScript, arquitectura, rutas).
 - PostgreSQL con tablas particionadas por año.
 
-[Unreleased]: https://github.com/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/compare/v0.1.0...v0.2.0

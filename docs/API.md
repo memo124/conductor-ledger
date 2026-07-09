@@ -118,8 +118,8 @@ Los CSV incluyen BOM UTF-8 para compatibilidad con Excel.
 |--------|------|------|-------------|
 | `index` | `/Usuarios` | GET | Vista de gestión de usuarios. |
 | `getDatatableServerSide` | `/Usuarios/GetDatatableServerSide` | GET | DataTable de todos los usuarios. Marca `is_self` para el admin logueado. |
-| `store` | `/Usuarios/Store` | POST | Crea usuario con rol y estado activo. |
-| `update` | `/Usuarios/Update/{id}` | PUT | Actualiza usuario. Impide auto-desactivarse o quitarse el rol admin. |
+| `store` | `/Usuarios/Store` | POST | Crea usuario con rol y estado activo. Envía correo formal al nuevo usuario; avisa si falla el envío. |
+| `update` | `/Usuarios/Update/{id}` | PUT | Actualiza usuario. Impide auto-desactivarse o quitarse el rol admin. Al reactivar cuenta inactiva envía correo de activación. |
 | `destroy` | `/Usuarios/Delete/{id}` | DELETE | Elimina usuario. Impide auto-eliminación. |
 
 **Campos:** `name`, `email`, `dui`, `password`, `role` (`admin|user`), `is_active`.

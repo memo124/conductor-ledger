@@ -119,9 +119,11 @@ server {
 
 ---
 
-## Cola de trabajos (correos, respaldos)
+## Cola de trabajos (respaldos)
 
-Con `QUEUE_CONNECTION=database` los jobs (correos, etc.) requieren un **worker** en segundo plano.
+Con `QUEUE_CONNECTION=database` los jobs en background (p. ej. `DatabaseBackupJob`) requieren un **worker** en segundo plano.
+
+> **Nota (v1.1.1):** las notificaciones formales por correo (registro, creación/activación de usuario) se envían de forma síncrona y **no** dependen del worker.
 
 ### Opción recomendada: Supervisor (Linux)
 
@@ -158,7 +160,7 @@ Tras cada deploy: `php artisan queue:restart`
 QUEUE_CONNECTION=sync
 ```
 
-Los correos se envían en la misma petición HTTP (más lento, sin proceso en background).
+Los jobs en cola se ejecutan en la misma petición HTTP (sin proceso en background). Los correos de notificación ya se envían así desde v1.1.1.
 
 ### Windows + XAMPP
 
