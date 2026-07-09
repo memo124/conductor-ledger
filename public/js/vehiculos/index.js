@@ -66,7 +66,7 @@ $(function () {
         }
 
         $rentalFields.hide();
-        $rentalFee.prop({ disabled: true, min: 0 }).val('');
+        $rentalFee.prop({ disabled: true, min: 0 }).val(0);
         $rentalPeriod.prop({ disabled: true }).val('daily');
     }
 
@@ -158,7 +158,7 @@ $(function () {
             }
         }
 
-        if (!ConductorLedger.validateMoneyForm($(this))) {
+        if (selection.requiresFee && !ConductorLedger.validateMoneyForm($(this))) {
             ConductorLedger.showAlert('La cuota no puede ser negativa.', 'danger');
             return;
         }

@@ -11,6 +11,13 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y el p
 
 ---
 
+## [1.1.3] - 2026-07-08
+
+### Fixed
+- **Vehículos PROPIO / OTRO:** `validateMoneyForm` ya no valida el campo de cuota deshabilitado; evita el falso error «La cuota no puede ser negativa» al guardar.
+
+---
+
 ## [1.1.2] - 2026-07-08
 
 Mejoras completas en registro de vehículos por tipo de propiedad y corrección de i18n DataTables en producción.
@@ -106,7 +113,8 @@ Primera versión estable con módulo financiero completo y capa de seguridad emp
 - Documentación base en `docs/` (API, JavaScript, arquitectura, rutas).
 - PostgreSQL con tablas particionadas por año.
 
-[Unreleased]: https://github.com/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/compare/v1.0.0...v1.1.0

@@ -33,7 +33,7 @@ ConductorLedger.initSelect2Paginated = function ($element, options) {
 
 ConductorLedger.validateMoneyForm = function ($form) {
     var valid = true;
-    $form.find('input[type="number"][min="0"]').each(function () {
+    $form.find('input[type="number"][min="0"]:enabled').each(function () {
         var value = parseFloat($(this).val());
         if (isNaN(value) || value < 0) {
             valid = false;

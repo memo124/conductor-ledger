@@ -1,6 +1,6 @@
 # ConductorLedger
 
-![Versión](https://img.shields.io/badge/versión-1.1.2-blue)
+![Versión](https://img.shields.io/badge/versión-1.1.3-blue)
 ![Laravel](https://img.shields.io/badge/Laravel-12-red)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-777)
 
@@ -26,6 +26,7 @@ Sistema web para que conductores de plataformas (InDrive, etc.) lleven el contro
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.1.3** | 2026-07-08 | Fix validación cuota en vehículos PROPIO/OTRO |
 | **1.1.2** | 2026-07-08 | Vehículos por tipo (PROPIO/FINANCIADO/ALQUILADO), quincenal, DataTables sin CORS |
 | **1.1.1** | 2026-07-08 | Fix creación vehículos, correo al crear usuario, envío síncrono de correos |
 | **1.1.0** | 2026-07-08 | Loaders AJAX, fix cifrado viajes/gastos, edición vehículos ALQUILADO |
@@ -42,7 +43,7 @@ php artisan about
 
 | Área | Corrección |
 |------|------------|
-| **Vehículos PROPIO / OTRO** | Creación y edición sin bloqueo del navegador; cuota = 0 automática. |
+| **Vehículos PROPIO / OTRO** | Creación y edición sin bloqueo del navegador ni falso error de cuota; cuota = 0 automática. |
 | **Vehículos ALQUILADO** | Periodo y cuota obligatorios (diario, semanal, quincenal, mensual). |
 | **Vehículos FINANCIADO** | Periodo y cuota de financiamiento obligatorios; prorrateo diario en viajes. |
 | **Correo al crear usuario** | Notificación formal al nuevo usuario desde el panel admin; aviso si falla el envío. |

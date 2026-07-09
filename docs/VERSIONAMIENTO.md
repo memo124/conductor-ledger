@@ -44,6 +44,7 @@ cat VERSION
 
 | Versión | Fecha | Resumen |
 |---------|-------|---------|
+| **1.1.3** | 2026-07-08 | Fix validación cuota vehículos PROPIO/OTRO |
 | **1.1.2** | 2026-07-08 | Vehículos por tipo, FINANCIADO, quincenal, DataTables sin CORS |
 | **1.1.1** | 2026-07-08 | Fix creación vehículos, correo al crear usuario |
 | **1.1.0** | 2026-07-08 | Loaders AJAX, fix cifrado, edición vehículos ALQUILADO |
