@@ -101,9 +101,26 @@ class UsuariosController extends Controller
 
         $this->syncUserRole($user, $validated['role']);
 
+        $mailUserSent = $this->notifications->sendFormal($user->email, new FormalNotificationData(
+            subject: 'Cuenta creada — '.config('app.name'),
+            recipientName: $user->name,
+            headline: $validated['is_active'] ? 'Su cuenta ha sido creada' : 'Cuenta registrada — pendiente de activación',
+            message: $validated['is_active']
+                ? 'Un administrador ha registrado su acceso a ConductorLedger. Ya puede iniciar sesión con su correo y la contraseña asignada.'
+                : 'Su cuenta fue registrada pero aún no está activa. Un administrador debe activarla antes de que pueda ingresar.',
+            eventAt: now(),
+            actionUrl: $validated['is_active'] ? route('login') : null,
+            actionLabel: $validated['is_active'] ? 'Iniciar sesión' : null,
+        ));
+
+        $message = 'Usuario creado correctamente.';
+        if (! $mailUserSent) {
+            $message .= ' No se pudo enviar el correo de notificación; el usuario sí fue guardado.';
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Usuario creado correctamente.',
+            'message' => $message,
             'data' => $user,
         ]);
     }
@@ -162,7 +179,7 @@ class UsuariosController extends Controller
         $this->permissions->clearCacheForUser($user->id);
 
         if (! $wasActive && $validated['is_active']) {
-            $this->notifications->sendFormal($user->email, new FormalNotificationData(
+            $mailUserSent = $this->notifications->sendFormal($user->email, new FormalNotificationData(
                 subject: 'Cuenta activada — '.config('app.name'),
                 recipientName: $user->name,
                 headline: 'Su cuenta ha sido activada',
@@ -173,9 +190,14 @@ class UsuariosController extends Controller
             ));
         }
 
+        $message = 'Usuario actualizado correctamente.';
+        if (isset($mailUserSent) && ! $mailUserSent) {
+            $message .= ' No se pudo enviar el correo de activación; los demás cambios sí fueron guardados.';
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Usuario actualizado correctamente.',
+            'message' => $message,
             'data' => $user->fresh(),
         ]);
     }

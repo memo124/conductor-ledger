@@ -14,7 +14,7 @@ class NotificationService
     public function sendFormal(User|string $recipient, FormalNotificationData $data): bool
     {
         try {
-            Mail::to($recipient)->queue(new FormalNotification($data));
+            Mail::to($recipient)->send(new FormalNotification($data));
 
             return true;
         } catch (Throwable $exception) {

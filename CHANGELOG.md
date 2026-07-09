@@ -11,6 +11,26 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y el p
 
 ---
 
+## [1.1.2] - 2026-07-08
+
+Mejoras completas en registro de vehículos por tipo de propiedad y corrección de i18n DataTables en producción.
+
+### Added
+- Soporte de **FINANCIADO** con periodo y cuota obligatorios (diario, semanal, quincenal, mensual).
+- Periodo **quincenal** (`biweekly`) en vehículos y prorrateo diario en viajes.
+- Etiquetas dinámicas en el modal (alquiler vs financiamiento) según el tipo seleccionado.
+
+### Fixed
+- **Formulario de vehículos:** `novalidate` + validación JS evita el error `rental_fee_daily is not focusable` al guardar PROPIO/OTRO.
+- **PROPIO / OTRO:** cuota forzada a `0` sin campos visibles; creación y edición funcionan correctamente.
+- **DataTables i18n:** traducción al español embebida (sin CDN) para evitar error CORS en servidores de producción.
+
+### Changed
+- `VehicleRentalService::ownershipRequiresFee()` centraliza tipos con cuota (**ALQUILADO**, **FINANCIADO**).
+- En viajes, ALQUILADO y FINANCIADO pueden registrar costo periódico prorrateado al día.
+
+---
+
 ## [1.1.1] - 2026-07-08
 
 Correcciones de creación de vehículos (todos los tipos de propiedad) y envío de correos al crear usuarios.
@@ -86,7 +106,8 @@ Primera versión estable con módulo financiero completo y capa de seguridad emp
 - Documentación base en `docs/` (API, JavaScript, arquitectura, rutas).
 - PostgreSQL con tablas particionadas por año.
 
-[Unreleased]: https://github.com/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/compare/v0.2.0...v1.0.0

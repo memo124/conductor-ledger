@@ -38,7 +38,7 @@
                 <h5 class="modal-title" id="modalVehiculoTitle">Registrar Vehículo</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="formVehiculo">
+            <form id="formVehiculo" novalidate>
                 <input type="hidden" name="vehicle_id" id="vehicleId">
                 <div class="modal-body">
                     <div class="mb-3">
@@ -51,17 +51,18 @@
                     </div>
                     <div id="rentalFields" style="display:none;">
                         <div class="mb-3">
-                            <label class="form-label">Periodo de alquiler</label>
+                            <label class="form-label" id="rentalPeriodLabel">Periodo de pago</label>
                             <select name="rental_period" class="form-select">
                                 <option value="daily">Diario</option>
                                 <option value="weekly">Semanal</option>
+                                <option value="biweekly">Quincenal</option>
                                 <option value="monthly">Mensual</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Cuota de alquiler ($)</label>
-                            <input type="number" step="0.01" min="0.01" name="rental_fee_daily" class="form-control" value="0">
-                            <small class="text-muted">Monto según el periodo seleccionado. En viajes se sugerirá la cuota diaria equivalente.</small>
+                            <label class="form-label" id="rentalFeeLabel">Cuota ($)</label>
+                            <input type="number" step="0.01" min="0" name="rental_fee_daily" class="form-control" value="">
+                            <small class="text-muted" id="rentalFeeHint">Monto según el periodo seleccionado. En viajes se sugerirá la cuota diaria equivalente.</small>
                         </div>
                     </div>
                     <div class="mb-3" id="activeField" style="display:none;">

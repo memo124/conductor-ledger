@@ -43,8 +43,25 @@ ConductorLedger.defaultDataTableOptions = ConductorLedger.chainInitComplete({
     pageLength: 10,
     lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
     language: {
-        url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json',
-        processing: '<div class="cl-dt-processing"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...</div>'
+        processing: '<div class="cl-dt-processing"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...</div>',
+        emptyTable: 'No hay datos disponibles en la tabla',
+        info: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
+        infoEmpty: 'Mostrando 0 a 0 de 0 registros',
+        infoFiltered: '(filtrado de _MAX_ registros totales)',
+        lengthMenu: 'Mostrar _MENU_ registros',
+        loadingRecords: 'Cargando...',
+        search: 'Buscar:',
+        zeroRecords: 'No se encontraron registros coincidentes',
+        paginate: {
+            first: 'Primero',
+            last: 'Último',
+            next: 'Siguiente',
+            previous: 'Anterior'
+        },
+        aria: {
+            sortAscending: ': activar para ordenar la columna ascendente',
+            sortDescending: ': activar para ordenar la columna descendente'
+        }
     }
 });
 

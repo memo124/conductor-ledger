@@ -8,9 +8,17 @@ use Illuminate\Validation\ValidationException;
 
 class VehicleRentalService
 {
+    /** Tipos que exigen periodo y cuota al registrar el vehículo. */
+    private const FEE_OWNERSHIP_TYPES = ['ALQUILADO', 'FINANCIADO'];
+
+    public function ownershipRequiresFee(?string $ownershipTypeName): bool
+    {
+        return in_array(strtoupper($ownershipTypeName ?? ''), self::FEE_OWNERSHIP_TYPES, true);
+    }
+
     public function isRentedVehicle(Vehicle $vehicle): bool
     {
-        return strtoupper($vehicle->ownershipType?->name ?? '') === 'ALQUILADO';
+        return $this->ownershipRequiresFee($vehicle->ownershipType?->name);
     }
 
     public function suggestDailyRental(Vehicle $vehicle, Carbon $fecha): float
@@ -23,6 +31,7 @@ class VehicleRentalService
 
         return round(match ($vehicle->rental_period ?? 'daily') {
             'weekly' => $fee / 7,
+            'biweekly' => $fee / 14,
             'monthly' => $fee / max(1, $fecha->daysInMonth),
             default => $fee,
         }, 2);
@@ -32,6 +41,7 @@ class VehicleRentalService
     {
         return match ($vehicle->rental_period ?? 'daily') {
             'weekly' => 'semanal',
+            'biweekly' => 'quincenal',
             'monthly' => 'mensual',
             default => 'diario',
         };
@@ -44,7 +54,7 @@ class VehicleRentalService
     {
         if (! $this->isRentedVehicle($vehicle) && $alquiler > 0) {
             throw ValidationException::withMessages([
-                'alquiler' => 'Solo los vehículos ALQUILADO pueden registrar costo de alquiler en el viaje.',
+                'alquiler' => 'Solo los vehículos ALQUILADO o FINANCIADO pueden registrar costo periódico en el viaje.',
             ]);
         }
     }
