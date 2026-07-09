@@ -6,13 +6,26 @@ use App\Models\AppOption;
 use App\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        $conductor = Role::query()->where('slug', 'conductor')->firstOrFail();
-        $admin = Role::query()->where('slug', 'administrador')->firstOrFail();
+        if (! Schema::hasTable('role_permissions') || ! Schema::hasTable('roles')) {
+            $this->command?->warn('Tablas RBAC no existen. Ejecuta la migración de seguridad primero.');
+
+            return;
+        }
+
+        $conductor = Role::query()->where('slug', 'conductor')->first();
+        $admin = Role::query()->where('slug', 'administrador')->first();
+
+        if (! $conductor || ! $admin) {
+            $this->command?->warn('Roles conductor/administrador no encontrados. Ejecuta RoleSeeder primero.');
+
+            return;
+        }
 
         $conductorSlugs = [
             'dashboard', 'viajes', 'gastos', 'vehiculos', 'graficos',

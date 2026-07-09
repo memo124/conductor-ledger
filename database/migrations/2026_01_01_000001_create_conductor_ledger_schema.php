@@ -114,7 +114,8 @@ return new class extends Migration
         DB::statement('CREATE INDEX idx_trips_search ON trips (user_id, fecha, vehicle_id)');
         DB::statement('CREATE INDEX idx_expenses_search ON expenses (user_id, fecha, vehicle_id)');
 
-        (new \Database\Seeders\DatabaseSeeder)->run();
+        (new \Database\Seeders\VehicleOwnershipTypeSeeder)->run();
+        (new \Database\Seeders\ExpenseCategorySeeder)->run();
     }
 
     public function down(): void

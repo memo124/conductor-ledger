@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use App\Models\Trip;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -23,6 +24,12 @@ class DemoDataSeeder extends Seeder
         }
 
         $ownership = VehicleOwnershipType::query()->where('name', 'ALQUILADO')->first();
+
+        if (! $ownership) {
+            $this->command?->warn('Tipo de propiedad ALQUILADO no encontrado. Ejecuta VehicleOwnershipTypeSeeder primero.');
+
+            return;
+        }
 
         $vehicle = Vehicle::query()->firstOrCreate(
             ['user_id' => $user->id, 'plate_number' => 'P123456'],
@@ -65,11 +72,19 @@ class DemoDataSeeder extends Seeder
             ->where('anio', $anio)
             ->update(['current_trip_number' => 5]);
 
+        $categoriaGasolina = ExpenseCategory::query()->where('name', 'GASOLINA')->first();
+
+        if (! $categoriaGasolina) {
+            $this->command?->warn('Categoría GASOLINA no encontrada. Omitiendo gasto demo.');
+
+            return;
+        }
+
         Expense::query()->create([
             'uuid' => (string) Str::uuid(),
             'user_id' => $user->id,
             'vehicle_id' => $vehicle->id,
-            'category_id' => 1,
+            'category_id' => $categoriaGasolina->id,
             'anio' => $anio,
             'expense_number' => 1,
             'fecha' => Carbon::now()->subDay()->toDateString(),

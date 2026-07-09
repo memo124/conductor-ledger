@@ -4,11 +4,18 @@ namespace Database\Seeders;
 
 use App\Models\AppOption;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class AppOptionSeeder extends Seeder
 {
     public function run(): void
     {
+        if (! Schema::hasTable('app_options')) {
+            $this->command?->warn('Tabla app_options no existe. Ejecuta la migración RBAC primero.');
+
+            return;
+        }
+
         $tree = [
             [
                 'slug' => 'operaciones',

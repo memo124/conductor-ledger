@@ -2,25 +2,43 @@
 
 namespace Database\Seeders;
 
-use App\Models\ExpenseCategory;
-use App\Models\User;
-use App\Models\Vehicle;
-use App\Models\VehicleOwnershipType;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([
-            RoleSeeder::class,
-            AppOptionSeeder::class,
-            RolePermissionSeeder::class,
+        $seeders = [
             VehicleOwnershipTypeSeeder::class,
             ExpenseCategorySeeder::class,
-            UserSeeder::class,
-            DemoDataSeeder::class,
-        ]);
+        ];
+
+        if (Schema::hasTable('roles')) {
+            array_unshift($seeders,
+                RoleSeeder::class,
+                AppOptionSeeder::class,
+                RolePermissionSeeder::class,
+            );
+        }
+
+        if ($this->puedeSembrarUsuarios()) {
+            $seeders[] = UserSeeder::class;
+            $seeders[] = DemoDataSeeder::class;
+        } else {
+            $this->command?->warn(
+                'Omitiendo UserSeeder/DemoDataSeeder: faltan columnas de seguridad (migración RBAC pendiente).'
+            );
+        }
+
+        $this->call($seeders);
+    }
+
+    private function puedeSembrarUsuarios(): bool
+    {
+        return Schema::hasTable('users')
+            && Schema::hasColumn('users', 'theme_preference')
+            && Schema::hasColumn('users', 'role')
+            && Schema::hasColumn('users', 'encrypted_dek');
     }
 }

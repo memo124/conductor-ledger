@@ -98,6 +98,10 @@ return new class extends Migration
 
     private function syncExistingUserRoles(): void
     {
+        if (! Schema::hasColumn('users', 'role') || ! Schema::hasTable('user_role')) {
+            return;
+        }
+
         $conductorRole = \App\Models\Role::query()->where('slug', 'conductor')->value('id');
         $adminRole = \App\Models\Role::query()->where('slug', 'administrador')->value('id');
 

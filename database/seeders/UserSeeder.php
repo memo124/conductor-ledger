@@ -7,11 +7,18 @@ use App\Models\User;
 use App\Services\EncryptionService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        if (! Schema::hasColumn('users', 'encrypted_dek')) {
+            $this->command?->warn('Columnas de cifrado no existen en users. Ejecuta la migración RBAC primero.');
+
+            return;
+        }
+
         $encryption = app(EncryptionService::class);
 
         $conductorKeys = $encryption->createUserKeyEnvelope('password123');
