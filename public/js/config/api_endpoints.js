@@ -61,10 +61,14 @@ const APLICATIVO_API = {
             COMPARATIVA_MENSUAL: '/Viajes/GetComparativaMensual',
             RENTAL_SUGGESTION: '/Viajes/GetRentalSuggestion',
             SELECT2: '/Viajes/Select2Paginated',
-            SELECT2_PLATFORMS: '/Viajes/Select2Platforms'
+            SELECT2_PLATFORMS: '/Viajes/Select2Platforms',
+            SHOW: '/Viajes/Show'
         },
         POST: {
             STORE: '/Viajes/Store'
+        },
+        PUT: {
+            UPDATE: '/Viajes/Update'
         }
     },
     GASTOS: {

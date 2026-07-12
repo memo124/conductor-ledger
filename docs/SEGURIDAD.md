@@ -37,10 +37,43 @@ Eventos registrados en `security_audit_logs` y log dedicado `storage/logs/securi
 
 ## Respaldos
 
-- Job mensual `DatabaseBackupJob` (pg_dump comprimido).
-- Retención configurable (`BACKUP_RETENTION_MONTHS`).
-- Descarga con token de un solo uso y TTL (`BackupDownloadToken`).
-- Notificación por correo al administrador.
+- **Formato:** `pg_dump --format=plain` genera un `.sql` restaurable con `psql`, empaquetado en `.zip` (`conductorledger_YYYYMMDD_HHMMSS.zip`).
+- **Generación manual:** panel **Administración → Respaldos** (permiso `admin.backups`).
+- **Job mensual:** `DatabaseBackupJob` en `routes/console.php` (requiere worker de cola o `QUEUE_CONNECTION=sync`).
+- **Almacenamiento:** disco `backup_local` → `storage/app/backups/YYYY/MM/`.
+- **Retención:** configurable (`BACKUP_RETENTION_MONTHS`, default 12 meses).
+- **Descarga:** token de un solo uso con TTL (`BackupDownloadToken`, default 15 min).
+- **Notificación:** correo al administrador al generar enlace de descarga o al completar/fallar el job programado.
+
+### Servicios (v1.2.1+)
+
+| Servicio | Función |
+|----------|---------|
+| `BackupService` | Orquesta dump, ZIP, retención y tokens |
+| `PgDumpResolver` | Localiza `pg_dump` (PATH, Windows, Linux, Docker) |
+| `SubprocessRunner` | Ejecuta procesos con entorno mínimo en Windows |
+| `ZipPackager` | Crea ZIP (`ZipArchive`, PowerShell o `zip`) |
+| `PlatformPath` | Normaliza rutas (`\` / `/`) en todos los SO |
+
+### Variables (.env)
+
+| Variable | Descripción |
+|----------|-------------|
+| `PG_DUMP_BINARY` | Ruta a `pg_dump` si no está en PATH |
+| `BACKUP_DISK` | Disco Laravel (default `backup_local`) |
+| `BACKUP_RETENTION_MONTHS` | Meses de retención |
+| `BACKUP_DOWNLOAD_TOKEN_TTL` | Minutos de validez del enlace |
+| `BACKUP_NOTIFY_EMAIL` | Correo para avisos de respaldo |
+
+### Restaurar un respaldo
+
+```bash
+# Descomprimir el ZIP y restaurar
+unzip conductorledger_20260712_120000.zip
+psql -h HOST -U USUARIO -d NOMBRE_BD -f conductorledger_20260712_120000.sql
+```
+
+Ver requisitos de servidor en [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Correo (Resend)
 

@@ -5,7 +5,7 @@
 @section('content')
 <div class="cl-page-header">
     <h1><i class="fa-solid fa-database text-primary"></i> Respaldos de base de datos</h1>
-    <p>Generación local de respaldos .sql (listo para nube futura)</p>
+    <p>Generación local de respaldos SQL empaquetados en ZIP (restaurables con psql)</p>
 </div>
 
 <div class="cl-card">

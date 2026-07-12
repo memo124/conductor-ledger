@@ -11,8 +11,16 @@
 <div class="cl-card">
     <form id="formEmergencyDecrypt">
         <div class="mb-3">
-            <label class="form-label">ID de usuario</label>
-            <input type="number" name="user_id" class="form-control" required min="1">
+            <label class="form-label">Usuario</label>
+            <select name="user_id" class="form-select" required>
+                <option value="">Seleccione un conductor...</option>
+                @forelse($users as $user)
+                    <option value="{{ $user->id }}">{{ $user->name }} — {{ $user->email }}</option>
+                @empty
+                    <option value="" disabled>No hay conductores activos disponibles</option>
+                @endforelse
+            </select>
+            <small class="text-muted">Solo se listan conductores activos (sin cuentas administrador).</small>
         </div>
         <div class="mb-3">
             <label class="form-label">Referencia de ticket / incidente</label>
@@ -26,7 +34,7 @@
             <label class="form-label">Su contraseña de administrador</label>
             <input type="password" name="admin_password" class="form-control" required>
         </div>
-        <button type="submit" class="btn btn-warning">
+        <button type="submit" class="btn btn-warning" @if($users->isEmpty()) disabled @endif>
             <i class="fa-solid fa-key"></i> Ejecutar descifrado
         </button>
     </form>

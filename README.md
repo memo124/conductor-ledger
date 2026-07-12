@@ -1,6 +1,6 @@
 # ConductorLedger
 
-![Versión](https://img.shields.io/badge/versión-1.1.3-blue)
+![Versión](https://img.shields.io/badge/versión-1.2.1-blue)
 ![Laravel](https://img.shields.io/badge/Laravel-12-red)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-777)
 
@@ -17,7 +17,7 @@ Sistema web para que conductores de plataformas (InDrive, etc.) lleven el contro
 - **Registro público** de conductores con aprobación por administrador.
 - **RBAC** con permisos granulares por módulo del menú.
 - **Cifrado** de datos financieros sensibles por usuario.
-- **Respaldos** automáticos de base de datos y notificaciones por correo (Resend).
+- **Respaldos** de base de datos en ZIP con SQL restaurable (`psql`), manuales y programados.
 - **Loaders visuales** en acciones AJAX (overlay + spinner en botones).
 
 - Gestión de **usuarios** (administradores) con activación, roles y auditoría.
@@ -26,6 +26,8 @@ Sistema web para que conductores de plataformas (InDrive, etc.) lleven el contro
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.2.1** | 2026-07-12 | Fix respaldos ZIP/SQL, rutas Windows, pg_dump multiplataforma |
+| **1.2.0** | 2026-07-12 | Registro híbrido de viajes, plataformas, tipos de viaje, permisos admin |
 | **1.1.3** | 2026-07-08 | Fix validación cuota en vehículos PROPIO/OTRO |
 | **1.1.2** | 2026-07-08 | Vehículos por tipo (PROPIO/FINANCIADO/ALQUILADO), quincenal, DataTables sin CORS |
 | **1.1.1** | 2026-07-08 | Fix creación vehículos, correo al crear usuario, envío síncrono de correos |
@@ -54,8 +56,8 @@ php artisan about
 
 | Componente | Versión mínima |
 |------------|----------------|
-| PHP        | 8.2 (+ `pdo_pgsql`, `openssl`, `sodium`) |
-| PostgreSQL | 14+            |
+| PHP        | 8.2 (+ `pdo_pgsql`, `openssl`, `sodium`; `zip` recomendado para respaldos) |
+| PostgreSQL | 14+ (incluir herramientas cliente: `pg_dump`) |
 | Composer   | 2.x            |
 | Node.js    | 18+ (opcional, para Vite) |
 
@@ -79,6 +81,7 @@ php -r "echo 'MASTER_ENCRYPTION_KEY=base64:'.base64_encode(random_bytes(32)).PHP
 # DB_PASSWORD=tu_password
 # RESEND_API_KEY=re_...
 # MAIL_FROM_ADDRESS=onboarding@resend.dev   # solo desarrollo
+# PG_DUMP_BINARY=pg_dump                    # o ruta completa en Windows
 
 # 4. Migrar y sembrar datos
 php artisan migrate
@@ -126,6 +129,7 @@ conductor-ledger/
 │   ├── Jobs/                 # Jobs en cola (respaldos)
 │   ├── Mail/                 # Correos formales (Resend)
 │   ├── Models/               # Eloquent + RBAC
+│   ├── Support/              # Utilidades (PlatformPath)
 │   └── Services/             # Cifrado, permisos, backups, auditoría
 ├── config/
 │   └── conductor-ledger.php  # Versión, cifrado, backups, registro
@@ -168,7 +172,7 @@ conductor-ledger/
 - Cifrado envelope de viajes/gastos por usuario.
 - Registro con modo aprobación (`REGISTRATION_MODE=approval`).
 - Auditoría en `storage/logs/security.log`.
-- Respaldos mensuales con descarga tokenizada.
+- Respaldos en ZIP con SQL (`psql`) y descarga tokenizada desde el panel admin.
 
 Detalle: [docs/SEGURIDAD.md](docs/SEGURIDAD.md)
 
@@ -182,6 +186,8 @@ Detalle: [docs/SEGURIDAD.md](docs/SEGURIDAD.md)
 | `QUEUE_CONNECTION` | `database` (producción) o `sync` (simple) |
 | `RESEND_API_KEY` | API de correo |
 | `SECURITY_ADMIN_EMAIL` | Notificaciones admin |
+| `PG_DUMP_BINARY` | Ruta a `pg_dump` (Windows/Docker si no está en PATH) |
+| `BACKUP_RETENTION_MONTHS` | Meses de retención de respaldos |
 | `APP_LOCALE` | `es` (mensajes en español) |
 
 Ver [.env.example](.env.example) completo.

@@ -25,7 +25,16 @@ class EmergencyDecryptController extends Controller
 
     public function index(): View
     {
-        return view('administracion.emergency-decrypt.index');
+        $users = User::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get()
+            ->filter(fn (User $user) => ! $user->isAdmin())
+            ->values();
+
+        return view('administracion.emergency-decrypt.index', [
+            'users' => $users,
+        ]);
     }
 
     public function decrypt(Request $request): JsonResponse
@@ -52,11 +61,20 @@ class EmergencyDecryptController extends Controller
 
         $target = User::query()->findOrFail($validated['user_id']);
 
+        if ($target->isAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se permite descifrar datos de cuentas administrador.',
+            ], 422);
+        }
+
         try {
             $dek = $this->encryption->unwrapUserDekWithMasterKey($target);
             $anio = (int) date('Y');
             $tripTotals = $this->financialRecords->monthlyTripTotals($target->id, $anio, null, $dek);
             $expenseTotal = $this->financialRecords->monthlyExpenseTotal($target->id, $anio, null, $dek);
+            $ingresos = $tripTotals['ingresos'];
+            $neto = $ingresos - $tripTotals['alquiler'] - $expenseTotal;
 
             $this->audit->log(
                 'emergency_decrypt.success',
@@ -91,11 +109,17 @@ class EmergencyDecryptController extends Controller
                 'data' => [
                     'user' => $target->only(['id', 'name', 'email']),
                     'anio' => $anio,
-                    'trip_totals' => $tripTotals,
-                    'expense_total' => $expenseTotal,
-                    'ingresos' => $tripTotals['indrive'] + $tripTotals['otros_viajes'] + $tripTotals['propina'],
-                    'neto' => ($tripTotals['indrive'] + $tripTotals['otros_viajes'] + $tripTotals['propina'])
-                        - $tripTotals['alquiler'] - $expenseTotal,
+                    'trip_totals' => [
+                        'ingresos' => round($ingresos, 2),
+                        'comision_app' => round($tripTotals['comision_app'], 2),
+                        'propina' => round($tripTotals['propina'], 2),
+                        'alquiler' => round($tripTotals['alquiler'], 2),
+                        'monto_bruto' => round($tripTotals['monto_bruto'], 2),
+                        'monto_cobrado' => round($tripTotals['monto_cobrado'], 2),
+                    ],
+                    'expense_total' => round($expenseTotal, 2),
+                    'ingresos' => round($ingresos, 2),
+                    'neto' => round($neto, 2),
                 ],
             ]);
         } catch (\Throwable $exception) {

@@ -190,6 +190,31 @@ Plantilla PDF compartida: `resources/views/exports/viajes-pdf.blade.php`.
 
 ---
 
+## Respaldos de base de datos (v1.2.1+)
+
+```mermaid
+flowchart LR
+    A[BackupsController] --> B[BackupService]
+    B --> C[PgDumpResolver]
+    B --> D[SubprocessRunner]
+    B --> E[ZipPackager]
+    B --> F[(storage/app/backups)]
+    G[DatabaseBackupJob] --> B
+```
+
+| Componente | Rol |
+|------------|-----|
+| `BackupService` | Dump SQL, empaquetado ZIP, retención, tokens |
+| `PgDumpResolver` | Resuelve binario `pg_dump` según SO |
+| `SubprocessRunner` | `proc_open` con entorno mínimo (Windows) |
+| `ZipPackager` | ZIP vía `ZipArchive`, PowerShell o `zip` |
+| `PlatformPath` | Normaliza rutas con `\` y `/` |
+| `BackupDownloadToken` | Enlace de descarga de un solo uso |
+
+Archivos generados: `storage/app/backups/YYYY/MM/conductorledger_YYYYMMDD_HHMMSS.zip` (contiene un `.sql` plain de PostgreSQL).
+
+---
+
 ## Tema visual
 
 - CSS personalizado: `public/css/app-themes.css`

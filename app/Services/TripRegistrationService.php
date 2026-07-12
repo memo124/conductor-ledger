@@ -21,6 +21,41 @@ class TripRegistrationService
     /**
      * @throws ValidationException
      */
+    public function validateTripPeriod(
+        string $registrationMode,
+        Carbon $fecha,
+        ?int $periodYear = null,
+        ?int $periodMonth = null,
+    ): void {
+        $today = Carbon::today();
+
+        if ($registrationMode === 'monthly') {
+            if (! $periodYear || ! $periodMonth) {
+                return;
+            }
+
+            $periodIndex = $periodYear * 12 + $periodMonth;
+            $currentIndex = (int) $today->format('Y') * 12 + (int) $today->format('n');
+
+            if ($periodIndex > $currentIndex) {
+                throw ValidationException::withMessages([
+                    'period_month' => 'No puede registrar un resumen mensual de un período futuro.',
+                ]);
+            }
+
+            return;
+        }
+
+        if ($fecha->isAfter($today)) {
+            throw ValidationException::withMessages([
+                'fecha' => 'No puede registrar viajes con fecha futura.',
+            ]);
+        }
+    }
+
+    /**
+     * @throws ValidationException
+     */
     public function validateUniqueness(
         int $userId,
         int $vehicleId,
@@ -30,6 +65,7 @@ class TripRegistrationService
         Carbon $fecha,
         ?int $periodYear,
         ?int $periodMonth,
+        ?string $excludeUuid = null,
     ): void {
         if ($registrationMode === 'daily' && $tripType->code === 'PLATAFORMA') {
             $exists = DB::table('trips')
@@ -38,6 +74,7 @@ class TripRegistrationService
                 ->where('fecha', $fecha->toDateString())
                 ->where('platform_id', $platformId)
                 ->where('registration_mode', 'daily')
+                ->when($excludeUuid, fn ($q) => $q->where('uuid', '!=', $excludeUuid))
                 ->exists();
 
             if ($exists) {
@@ -56,6 +93,7 @@ class TripRegistrationService
                 ->where('fecha', $fecha->toDateString())
                 ->where('trip_type_id', $tripType->id)
                 ->where('registration_mode', 'daily')
+                ->when($excludeUuid, fn ($q) => $q->where('uuid', '!=', $excludeUuid))
                 ->exists();
 
             if ($exists) {
@@ -75,6 +113,7 @@ class TripRegistrationService
                 ->where('registration_mode', 'monthly')
                 ->where('period_year', $periodYear)
                 ->where('period_month', $periodMonth)
+                ->when($excludeUuid, fn ($q) => $q->where('uuid', '!=', $excludeUuid))
                 ->exists();
 
             if ($exists) {

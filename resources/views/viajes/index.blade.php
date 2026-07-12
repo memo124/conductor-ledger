@@ -60,6 +60,17 @@
             <label class="form-label">Vehículo</label>
             <select name="vehicle_id" id="filterVehicle" class="form-select form-select-sm"></select>
         </div>
+        @if($isAdmin)
+        <div class="col-12 col-md-6 col-lg-2">
+            <label class="form-label">Conductor</label>
+            <select name="target_user_id" id="filterConductor" class="form-select form-select-sm">
+                <option value="">Mis viajes (admin)</option>
+                @foreach($conductors as $conductor)
+                    <option value="{{ $conductor->id }}">{{ $conductor->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        @endif
         <div class="col-12 col-lg-auto">
             <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-filter"></i> Filtrar</button>
         </div>
@@ -106,6 +117,7 @@
                     <th>Alquiler</th>
                     <th>Ingresos</th>
                     <th>Neto</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
         </table>
@@ -120,6 +132,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="formNuevoViaje">
+                <input type="hidden" name="registration_mode" id="inputRegistrationMode" value="daily">
+                <input type="hidden" name="edit_uuid" id="editUuid" value="">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Vehículo</label>
@@ -137,15 +151,15 @@
                         <label class="form-label">Modo de registro</label>
                         <div class="d-flex flex-wrap gap-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="registration_mode" id="modePerTrip" value="per_trip">
+                                <input class="form-check-input" type="radio" name="registration_mode_radio" id="modePerTrip" value="per_trip">
                                 <label class="form-check-label" for="modePerTrip">Viaje individual</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="registration_mode" id="modeDaily" value="daily">
+                                <input class="form-check-input" type="radio" name="registration_mode_radio" id="modeDaily" value="daily" checked>
                                 <label class="form-check-label" for="modeDaily">Resumen del día</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="registration_mode" id="modeMonthly" value="monthly">
+                                <input class="form-check-input" type="radio" name="registration_mode_radio" id="modeMonthly" value="monthly">
                                 <label class="form-check-label" for="modeMonthly">Resumen del mes</label>
                             </div>
                         </div>
@@ -161,12 +175,12 @@
                     </div>
                     <div class="mb-3" id="fieldFecha">
                         <label class="form-label">Fecha</label>
-                        <input type="date" name="fecha" class="form-control" value="{{ date('Y-m-d') }}">
+                        <input type="date" name="fecha" class="form-control" value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}">
                     </div>
                     <div class="row" id="fieldPeriod" style="display:none;">
                         <div class="col-6 mb-3">
                             <label class="form-label">Año</label>
-                            <input type="number" name="period_year" class="form-control" min="2000" max="2100" value="{{ date('Y') }}">
+                            <input type="number" name="period_year" class="form-control" min="2000" max="{{ date('Y') }}" value="{{ date('Y') }}">
                         </div>
                         <div class="col-6 mb-3">
                             <label class="form-label">Mes</label>
@@ -207,7 +221,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="submit" class="btn btn-success" id="btnSubmitViaje">Guardar</button>
                 </div>
             </form>
         </div>
@@ -217,7 +231,7 @@
 
 @push('scripts')
 <script>
-    window.CL_TRIP_TYPES = @json($tripTypes->map(fn($t) => ['id' => $t->id, 'code' => $t->code, 'name' => $t->name, 'allowed_modes' => explode(',', $t->allowed_modes)]));
+    window.CL_TRIP_TYPES = @json($tripTypesJson);
 </script>
 <script src="{{ asset('js/common/select2-paginated.js') }}"></script>
 <script src="{{ asset('js/viajes/index.js') }}"></script>

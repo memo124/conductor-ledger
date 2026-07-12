@@ -11,6 +11,27 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y el p
 
 ---
 
+## [1.2.1] - 2026-07-12
+
+Corrección de respaldos manuales y programados: formato ZIP con SQL restaurable, compatibilidad Windows/Linux/Docker y rutas normalizadas.
+
+### Added
+- Servicios `PgDumpResolver`, `ZipPackager`, `SubprocessRunner` y utilidad `PlatformPath`.
+- Detección automática de `pg_dump` en Windows, Linux y contenedores Docker.
+- Empaquetado ZIP vía `ZipArchive`, PowerShell (`Compress-Archive`) o comando `zip`.
+
+### Fixed
+- **Respaldos desde la app (Windows/XAMPP):** rutas con barras mezcladas (`\` y `/`) que impedían crear o descargar el ZIP.
+- **Errores truncados en JSON:** mensajes de `pg_dump` en CP1252 ahora se convierten a UTF-8.
+- **Subprocess en Windows:** entorno mínimo al ejecutar `pg_dump` (evita bloqueos de `proc_open` con PATH enorme en Apache).
+- Descarga HTTP con `Content-Type: application/zip` y respuestas JSON seguras (`JSON_INVALID_UTF8_SUBSTITUTE`).
+
+### Changed
+- Formato de respaldo: `pg_dump --format=plain` → archivo `.sql` dentro de `.zip` (restaurable con `psql`).
+- Almacenamiento en `storage/app/backups/YYYY/MM/conductorledger_YYYYMMDD_HHMMSS.zip`.
+
+---
+
 ## [1.2.0] - 2026-07-12
 
 Registro híbrido de viajes (resumen diario/mensual + viaje individual), maestros de plataformas y tipos de viaje, permisos admin, filtros y correcciones móvil.

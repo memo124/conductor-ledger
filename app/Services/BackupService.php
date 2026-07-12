@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\BackupDownloadToken;
 use App\Models\User;
-use Illuminate\Support\Facades\Process;
+use App\Support\PlatformPath;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -13,61 +13,97 @@ class BackupService
 {
     public function __construct(
         private readonly SecurityAuditService $audit,
+        private readonly PgDumpResolver $pgDumpResolver,
+        private readonly ZipPackager $zipPackager,
+        private readonly SubprocessRunner $subprocess,
     ) {}
 
     public function createDatabaseBackup(?User $actor = null): array
     {
         $disk = Storage::disk(config('conductor-ledger.backup.disk', 'backup_local'));
         $timestamp = now()->format('Ymd_His');
-        $filename = "conductorledger_{$timestamp}.dump";
-        $relativePath = now()->format('Y/m')."/{$filename}";
-        $absolutePath = $disk->path($relativePath);
+        $sqlFilename = "conductorledger_{$timestamp}.sql";
+        $zipFilename = "conductorledger_{$timestamp}.zip";
+        $relativeDir = now()->format('Y/m');
+        $sqlRelativePath = "{$relativeDir}/{$sqlFilename}";
+        $zipRelativePath = "{$relativeDir}/{$zipFilename}";
 
-        $disk->makeDirectory(dirname($relativePath));
+        $disk->makeDirectory($relativeDir);
+
+        $sqlAbsolutePath = $this->absoluteBackupPath($relativeDir, $sqlFilename);
+        $zipAbsolutePath = $this->absoluteBackupPath($relativeDir, $zipFilename);
+
+        $pgDump = $this->pgDumpResolver->resolve();
 
         $command = [
-            config('conductor-ledger.backup.pg_dump_binary', 'pg_dump'),
-            '--format=custom',
+            $pgDump,
+            '--format=plain',
             '--no-owner',
             '--no-acl',
-            '--file='.$absolutePath,
+            '--file='.$sqlAbsolutePath,
             '--host='.config('database.connections.pgsql.host'),
             '--port='.config('database.connections.pgsql.port'),
             '--username='.config('database.connections.pgsql.username'),
             config('database.connections.pgsql.database'),
         ];
 
-        $result = Process::env([
-            'PGPASSWORD' => config('database.connections.pgsql.password'),
-        ])->run($command);
+        $result = $this->subprocess->run(
+            $command,
+            dirname($pgDump),
+            [
+                'PGPASSWORD' => (string) config('database.connections.pgsql.password'),
+                'PGCLIENTENCODING' => 'UTF8',
+                'PG_BIN' => dirname($pgDump),
+            ],
+            300,
+        );
 
         if (! $result->successful()) {
-            throw new RuntimeException(trim($result->errorOutput()) ?: 'pg_dump falló.');
+            $disk->delete($sqlRelativePath);
+            throw new RuntimeException($this->formatProcessFailure($result));
         }
 
-        $compressedName = $filename.'.gz';
-        $compressedRelative = now()->format('Y/m')."/{$compressedName}";
-        $compressedAbsolute = $disk->path($compressedRelative);
+        if (! is_file($sqlAbsolutePath) || filesize($sqlAbsolutePath) === 0) {
+            $disk->delete($sqlRelativePath);
+            throw new RuntimeException('pg_dump no generó un archivo SQL válido.');
+        }
 
-        $gz = gzopen($compressedAbsolute, 'wb9');
-        gzwrite($gz, file_get_contents($absolutePath));
-        gzclose($gz);
-        $disk->delete($relativePath);
+        $sql = file_get_contents($sqlAbsolutePath);
+        if ($sql === false || ! str_contains($sql, 'PostgreSQL database dump')) {
+            $disk->delete($sqlRelativePath);
+            throw new RuntimeException('pg_dump no generó un archivo SQL válido.');
+        }
 
-        $checksum = hash_file('sha256', $compressedAbsolute);
+        try {
+            $this->zipPackager->createFromString($zipAbsolutePath, $sql, $sqlFilename);
+        } catch (\Throwable $exception) {
+            $disk->delete($sqlRelativePath);
+            throw $exception;
+        }
+
+        $disk->delete($sqlRelativePath);
+
+        if (! is_file($zipAbsolutePath) || filesize($zipAbsolutePath) === 0) {
+            $disk->delete($zipRelativePath);
+            throw new RuntimeException('El archivo ZIP del respaldo quedó vacío.');
+        }
+
+        $checksum = hash_file('sha256', $zipAbsolutePath);
 
         $this->audit->log('backup.created', $actor?->id, null, null, [
-            'filename' => $compressedName,
+            'filename' => $zipFilename,
             'checksum' => $checksum,
+            'path' => $zipAbsolutePath,
         ]);
 
         $this->purgeOldBackups($disk);
 
         return [
-            'filename' => $compressedName,
-            'path' => $compressedRelative,
+            'filename' => $zipFilename,
+            'path' => $zipRelativePath,
+            'absolute_path' => $zipAbsolutePath,
             'checksum' => $checksum,
-            'size' => filesize($compressedAbsolute),
+            'size' => filesize($zipAbsolutePath),
         ];
     }
 
@@ -89,7 +125,7 @@ class BackupService
         $token = BackupDownloadToken::query()->findOrFail($tokenId);
 
         if (! $token->isValid()) {
-            throw new RuntimeException('El enlace de descarga expiró o ya fue utilizado.');
+            abort(410, 'El enlace de descarga expiró o ya fue utilizado.');
         }
 
         return $token;
@@ -98,15 +134,21 @@ class BackupService
     public function backupFilePath(string $filename): string
     {
         $disk = Storage::disk(config('conductor-ledger.backup.disk', 'backup_local'));
-        $matches = $disk->allFiles();
 
-        foreach ($matches as $path) {
+        foreach ($disk->allFiles() as $path) {
             if (basename($path) === $filename) {
-                return $disk->path($path);
+                return PlatformPath::normalize($disk->path($path));
             }
         }
 
         throw new RuntimeException('Archivo de respaldo no encontrado.');
+    }
+
+    private function absoluteBackupPath(string $relativeDir, string $filename): string
+    {
+        $root = PlatformPath::normalize(storage_path('app/backups'));
+
+        return PlatformPath::join($root, str_replace('/', DIRECTORY_SEPARATOR, $relativeDir), $filename);
     }
 
     private function purgeOldBackups($disk): void
@@ -119,5 +161,23 @@ class BackupService
                 $disk->delete($path);
             }
         }
+    }
+
+    private function formatProcessFailure(SubprocessResult $result): string
+    {
+        $details = trim($this->sanitizeCliOutput($result->stderr)."\n".$this->sanitizeCliOutput($result->stdout));
+
+        return $details !== '' ? $details : 'pg_dump falló sin detalle.';
+    }
+
+    private function sanitizeCliOutput(string $output): string
+    {
+        if ($output === '' || mb_check_encoding($output, 'UTF-8')) {
+            return $output;
+        }
+
+        $converted = mb_convert_encoding($output, 'UTF-8', 'Windows-1252');
+
+        return $converted !== false ? $converted : $output;
     }
 }

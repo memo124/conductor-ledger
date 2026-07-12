@@ -42,11 +42,11 @@
             <thead>
                 <tr>
                     <th>Mes</th>
-                    <th>InDrive</th>
-                    <th>Otros</th>
+                    <th>Ingresos</th>
+                    <th>Comisión</th>
                     <th>Propinas</th>
                     <th>Alquiler</th>
-                    <th>Total Ingresos</th>
+                    <th>Total</th>
                 </tr>
             </thead>
             <tbody></tbody>

@@ -104,6 +104,30 @@ Leyenda: 🔓 pública · 🔐 requiere login · 👑 requiere admin
 | PUT | `/Usuarios/Update/{id}` | — |
 | DELETE | `/Usuarios/Delete/{id}` | — |
 
+### Respaldos (permiso `admin.backups`)
+
+| Método | Ruta | Nombre | Descripción |
+|--------|------|--------|-------------|
+| GET | `/Administracion/Backups` | `admin.backups.index` | Pantalla de respaldos |
+| POST | `/Administracion/Backups/Generar` | `admin.backups.generate` | Genera ZIP con SQL (`pg_dump`) |
+| POST | `/Administracion/Backups/EnlaceDescarga` | `admin.backups.issue-link` | Token temporal de descarga |
+| GET | `/Administracion/Backups/Descargar/{token}` | `admin.backups.download` | Descarga el ZIP (un solo uso) |
+
+### Descifrado de emergencia (permiso `admin.emergency-decrypt`)
+
+| Método | Ruta | Nombre |
+|--------|------|--------|
+| GET | `/Administracion/DescifradoEmergencia` | `admin.emergency-decrypt.index` |
+| POST | `/Administracion/DescifradoEmergencia/Ejecutar` | `admin.emergency-decrypt.execute` |
+
+### Permisos RBAC (permiso `admin.permisos`)
+
+| Método | Ruta | Nombre |
+|--------|------|--------|
+| GET | `/Administracion/Permisos` | `admin.permisos.index` |
+| GET | `/Administracion/Permisos/GetMatrix` | — |
+| PUT | `/Administracion/Permisos/Update` | — |
+
 ---
 
 ## Parámetros comunes

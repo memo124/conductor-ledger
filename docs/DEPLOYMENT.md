@@ -5,9 +5,9 @@ Guía para publicar ConductorLedger en **Apache**, **Nginx** o **XAMPP** sin usa
 ## Requisitos del servidor
 
 - PHP 8.2+ con extensiones: `pdo_pgsql`, `openssl`, `mbstring`, `json`, `sodium`
-- PostgreSQL 14+
+- PostgreSQL 14+ (cliente `pg_dump` instalado en el servidor)
 - Composer 2.x
-- `pg_dump` en PATH (respaldos automáticos)
+- Para respaldos ZIP: extensión PHP `zip` recomendada (`extension=zip` en `php.ini`); en Windows sin `zip`, se usa PowerShell; en Linux, el paquete `zip` del sistema
 
 ## Variables de entorno críticas
 
@@ -32,6 +32,13 @@ RESEND_API_KEY=re_...
 MASTER_ENCRYPTION_KEY=base64:...
 REGISTRATION_MODE=approval
 SECURITY_ADMIN_EMAIL=admin@tudominio.com
+
+# Respaldos (v1.2.1+)
+PG_DUMP_BINARY=pg_dump
+BACKUP_DISK=backup_local
+BACKUP_RETENTION_MONTHS=12
+BACKUP_NOTIFY_EMAIL=admin@tudominio.com
+BACKUP_DOWNLOAD_TOKEN_TTL=15
 ```
 
 Generar claves:
@@ -172,6 +179,47 @@ php artisan queue:work database --sleep=3 --tries=3
 
 ---
 
+## Respaldos de base de datos (v1.2.1+)
+
+### Requisitos
+
+| Plataforma | `pg_dump` | ZIP |
+|------------|-----------|-----|
+| **Linux / Docker** | `postgresql-client` o imagen con `pg_dump` en PATH | `apt install zip` o PHP `zip` |
+| **Windows (XAMPP)** | Instalar [PostgreSQL](https://www.postgresql.org/download/windows/) o indicar ruta en `.env` | `extension=zip` en `php.ini` o PowerShell (incluido en Windows) |
+
+Ejemplo Windows cuando `pg_dump` no está en PATH:
+
+```env
+PG_DUMP_BINARY="C:\Program Files\PostgreSQL\17\bin\pg_dump.exe"
+```
+
+### Permisos de carpeta
+
+El usuario del servidor web (Apache/`www-data`) debe poder escribir en:
+
+```text
+storage/app/backups/
+```
+
+En XAMPP, la carpeta del proyecto debe ser escribible por el usuario que ejecuta Apache.
+
+### Generación manual vs programada
+
+| Modo | Cómo | Cola |
+|------|------|------|
+| **Manual** | Administración → Respaldos → «Generar respaldo ahora» | No requiere worker |
+| **Programado** | `DatabaseBackupJob` vía `schedule:run` | Requiere `queue:work` o `QUEUE_CONNECTION=sync` |
+
+### Restaurar
+
+```bash
+unzip conductorledger_YYYYMMDD_HHMMSS.zip
+psql -h 127.0.0.1 -U postgres -d conductor_ledger -f conductorledger_YYYYMMDD_HHMMSS.sql
+```
+
+---
+
 ## Tareas programadas
 
 Backups mensuales y particiones de tablas se definen en `routes/console.php`. Agregar **un cron**:
@@ -200,3 +248,6 @@ Backups mensuales y particiones de tablas se definen en `routes/console.php`. Ag
 - [ ] Dominio verificado en Resend
 - [ ] `MASTER_ENCRYPTION_KEY` respaldada de forma segura (fuera del repo)
 - [ ] Probar login, registro, activación de usuario y envío de correo
+- [ ] Probar respaldo manual (Administración → Respaldos) y descarga del ZIP
+- [ ] `pg_dump` accesible desde PHP (`PG_DUMP_BINARY` si hace falta)
+- [ ] Carpeta `storage/app/backups` escribible

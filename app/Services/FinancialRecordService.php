@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class FinancialRecordService
@@ -12,9 +13,11 @@ class FinancialRecordService
         private readonly EncryptionService $encryption,
     ) {}
 
-    public function encryptTripPayload(array $amounts): array
+    public function encryptTripPayload(array $amounts, ?int $ownerUserId = null): array
     {
-        $dek = $this->requireSessionDek();
+        $dek = $ownerUserId !== null && $ownerUserId !== (int) Auth::id()
+            ? $this->dekForUser($ownerUserId)
+            : $this->requireSessionDek();
 
         $payload = [
             'monto_bruto' => (float) ($amounts['monto_bruto'] ?? 0),
@@ -98,11 +101,17 @@ class FinancialRecordService
 
         $indrive = (float) ($row->indrive ?? 0);
         $otros = (float) ($row->otros_viajes ?? 0);
+        $montoBruto = (float) ($row->monto_bruto ?? 0);
+        $montoCobrado = (float) ($row->monto_cobrado ?? 0);
+
+        if ($montoBruto <= 0 && ($indrive > 0 || $otros > 0)) {
+            $montoBruto = $indrive + $otros;
+        }
 
         return [
-            'monto_bruto' => $indrive + $otros,
-            'comision_app' => 0,
-            'monto_cobrado' => 0,
+            'monto_bruto' => $montoBruto,
+            'comision_app' => (float) ($row->comision_app ?? 0),
+            'monto_cobrado' => $montoCobrado,
             'propina' => (float) ($row->propina ?? 0),
             'alquiler' => (float) ($row->alquiler ?? 0),
             'porcentaje_cuota' => (float) ($row->porcentaje_cuota ?? 0),
@@ -326,6 +335,22 @@ class FinancialRecordService
             'monto' => 0,
             'descripcion' => null,
         ];
+    }
+
+    public function dekForUser(int $userId): string
+    {
+        if ($userId === (int) Auth::id()) {
+            return $this->requireSessionDek();
+        }
+
+        $actor = Auth::user();
+        if (! $actor || ! $actor->isAdmin()) {
+            throw new \RuntimeException('No tiene permiso para acceder a los datos de otro usuario.');
+        }
+
+        $owner = User::query()->findOrFail($userId);
+
+        return $this->encryption->unwrapUserDekWithMasterKey($owner);
     }
 
     private function requireSessionDek(): string

@@ -62,7 +62,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/Viajes/GetRentalSuggestion', [ViajesController::class, 'getRentalSuggestion']);
         Route::get('/Viajes/Select2Paginated', [ViajesController::class, 'select2Paginated']);
         Route::get('/Viajes/Select2Platforms', [ViajesController::class, 'select2Platforms']);
+        Route::get('/Viajes/Show/{uuid}', [ViajesController::class, 'show']);
         Route::post('/Viajes/Store', [ViajesController::class, 'store']);
+        Route::put('/Viajes/Update/{uuid}', [ViajesController::class, 'update']);
     });
 
     Route::middleware('permission:gastos')->group(function () {

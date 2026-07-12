@@ -22,13 +22,13 @@ $(function () {
         $.get(APLICATIVO_API.VIAJES.GET.COMPARATIVA_MENSUAL, { anio: new Date().getFullYear() })
             .done(function (res) {
                 var data = (res.data || []).map(function (row) {
-                    var ingresos = parseFloat(row.total_indrive) + parseFloat(row.total_otros) + parseFloat(row.total_propinas);
+                    var ingresos = parseFloat(row.total_ingresos || 0);
                     return {
                         mes: meses[row.mes],
-                        indrive: parseFloat(row.total_indrive).toFixed(2),
-                        otros: parseFloat(row.total_otros).toFixed(2),
-                        propinas: parseFloat(row.total_propinas).toFixed(2),
-                        alquiler: parseFloat(row.total_alquiler).toFixed(2),
+                        ingresos: ingresos.toFixed(2),
+                        comision: parseFloat(row.total_comision || 0).toFixed(2),
+                        propinas: parseFloat(row.total_propinas || 0).toFixed(2),
+                        alquiler: parseFloat(row.total_alquiler || 0).toFixed(2),
                         total: ingresos.toFixed(2)
                     };
                 });
@@ -43,13 +43,13 @@ $(function () {
                     columns: [
                         { data: 'mes' },
                         {
-                            data: 'indrive',
+                            data: 'ingresos',
                             className: 'text-income',
                             render: function (d) { return '$' + d; }
                         },
                         {
-                            data: 'otros',
-                            className: 'text-income',
+                            data: 'comision',
+                            className: 'text-expense',
                             render: function (d) { return '$' + d; }
                         },
                         {

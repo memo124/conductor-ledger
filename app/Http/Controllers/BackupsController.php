@@ -11,7 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class BackupsController extends Controller
 {
@@ -30,13 +30,20 @@ class BackupsController extends Controller
     {
         $this->audit->log('backup.requested', Auth::id(), null, null, null, $request);
 
-        $result = $this->backups->createDatabaseBackup(Auth::user());
+        try {
+            $result = $this->backups->createDatabaseBackup(Auth::user());
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Respaldo generado correctamente.',
-            'data' => $result,
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Respaldo generado correctamente.',
+                'data' => $result,
+            ]);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422, [], JSON_INVALID_UTF8_SUBSTITUTE);
+        }
     }
 
     public function issueDownloadLink(Request $request): JsonResponse
@@ -74,39 +81,30 @@ class BackupsController extends Controller
         ]);
     }
 
-    public function download(string $tokenId): StreamedResponse|JsonResponse
+    public function download(string $tokenId): BinaryFileResponse
     {
-        try {
-            /** @var BackupDownloadToken $token */
-            $token = $this->backups->resolveDownload($tokenId);
+        /** @var BackupDownloadToken $token */
+        $token = $this->backups->resolveDownload($tokenId);
 
-            if ($token->user_id !== Auth::id() && ! Auth::user()->isAdmin()) {
-                abort(403);
-            }
-
-            $path = $this->backups->backupFilePath($token->filename);
-
-            if (hash_file('sha256', $path) !== $token->checksum) {
-                abort(409, 'Checksum inválido.');
-            }
-
-            $token->update(['used_at' => now()]);
-
-            $this->audit->log('backup.downloaded', Auth::id(), null, null, [
-                'filename' => $token->filename,
-                'token_id' => $token->id,
-            ], request());
-
-            return response()->streamDownload(function () use ($path) {
-                readfile($path);
-            }, $token->filename, [
-                'Content-Type' => 'application/gzip',
-            ]);
-        } catch (\Throwable $exception) {
-            return response()->json([
-                'success' => false,
-                'message' => $exception->getMessage(),
-            ], 422);
+        if ($token->user_id !== Auth::id() && ! Auth::user()->isAdmin()) {
+            abort(403);
         }
+
+        $path = $this->backups->backupFilePath($token->filename);
+
+        if (hash_file('sha256', $path) !== $token->checksum) {
+            abort(409, 'Checksum inválido.');
+        }
+
+        $token->update(['used_at' => now()]);
+
+        $this->audit->log('backup.downloaded', Auth::id(), null, null, [
+            'filename' => $token->filename,
+            'token_id' => $token->id,
+        ], request());
+
+        return response()->download($path, $token->filename, [
+            'Content-Type' => 'application/zip',
+        ]);
     }
 }
