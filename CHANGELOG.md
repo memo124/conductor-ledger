@@ -11,6 +11,31 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y el p
 
 ---
 
+## [1.2.0] - 2026-07-12
+
+Registro híbrido de viajes (resumen diario/mensual + viaje individual), maestros de plataformas y tipos de viaje, permisos admin, filtros y correcciones móvil.
+
+### Added
+- **Registro de viajes v2:** modos `per_trip`, `daily`, `monthly` según tipo de viaje.
+- Tablas maestras `trip_types`, `platforms` con pantallas de mantenimiento.
+- Campos `monto_bruto`, `comision_app` (manual), `monto_cobrado`, `porcentaje_cuota`.
+- **Vehículos:** `quota_percentage` y `quota_reserve_amount` para sugerencia de cuota por % del ingreso.
+- **Filtros** desde/hasta en Viajes y Gastos con totales en cabecera.
+- Pantalla **Administración → Permisos** (matriz RBAC por rol).
+- Menú dinámico desde `app_options` + permisos del usuario.
+- Botón **Salir** visible en header móvil.
+
+### Changed
+- Cifrado de viajes a **payload v2** (compatible lectura v1).
+- Export CSV/PDF con columnas del nuevo modelo.
+- DUI **opcional** (nullable en BD y formularios).
+
+### Fixed
+- Loader global: `ajaxError` + reset de seguridad a 30s.
+- Sidebar móvil con scroll; footer siempre accesible.
+
+---
+
 ## [1.1.3] - 2026-07-08
 
 ### Fixed

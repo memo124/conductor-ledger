@@ -39,6 +39,9 @@
         <span class="cl-mobile-brand">
             <i class="fa-solid fa-chart-line"></i> ConductorLedger
         </span>
+        <button type="button" id="btnLogoutMobile" class="btn btn-sm btn-outline-danger cl-mobile-logout">
+            <i class="fa-solid fa-right-from-bracket"></i> Salir
+        </button>
     </header>
 
     <nav class="cl-sidebar" id="clSidebar" aria-hidden="true">
@@ -50,22 +53,20 @@
             </button>
         </div>
         <ul class="cl-nav">
-            <li><a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
-            <li><a href="{{ route('viajes.index') }}" class="{{ request()->routeIs('viajes.*') ? 'active' : '' }}"><i class="fa-solid fa-road"></i> Viajes</a></li>
-            <li><a href="{{ route('gastos.index') }}" class="{{ request()->routeIs('gastos.*') ? 'active' : '' }}"><i class="fa-solid fa-wallet"></i> Gastos</a></li>
-            <li><a href="{{ route('vehiculos.index') }}" class="{{ request()->routeIs('vehiculos.*') ? 'active' : '' }}"><i class="fa-solid fa-car"></i> Vehículos</a></li>
-            <li><a href="{{ route('graficos.index') }}" class="{{ request()->routeIs('graficos.*') ? 'active' : '' }}"><i class="fa-solid fa-chart-pie"></i> Gráficos</a></li>
-            <li class="cl-nav-divider">Maestros</li>
-            <li><a href="{{ route('tipos-propiedad.index') }}" class="{{ request()->routeIs('tipos-propiedad.*') ? 'active' : '' }}"><i class="fa-solid fa-key"></i> Tipos Propiedad</a></li>
-            <li><a href="{{ route('categorias-gasto.index') }}" class="{{ request()->routeIs('categorias-gasto.*') ? 'active' : '' }}"><i class="fa-solid fa-tags"></i> Categorías Gasto</a></li>
-            <li class="cl-nav-divider">Cuenta</li>
-            <li><a href="{{ route('perfil.index') }}" class="{{ request()->routeIs('perfil.*') ? 'active' : '' }}"><i class="fa-solid fa-user"></i> Mi Perfil</a></li>
-            @if(auth()->user()->isAdmin())
-            <li class="cl-nav-divider">Administración</li>
-            <li><a href="{{ route('usuarios.index') }}" class="{{ request()->routeIs('usuarios.*') ? 'active' : '' }}"><i class="fa-solid fa-users-gear"></i> Usuarios</a></li>
-            <li><a href="{{ route('admin.backups.index') }}" class="{{ request()->routeIs('admin.backups.*') ? 'active' : '' }}"><i class="fa-solid fa-database"></i> Respaldos</a></li>
-            <li><a href="{{ route('admin.emergency-decrypt.index') }}" class="{{ request()->routeIs('admin.emergency-decrypt.*') ? 'active' : '' }}"><i class="fa-solid fa-unlock-keyhole"></i> Descifrado emergencia</a></li>
-            @endif
+            @foreach($clMenu ?? [] as $section)
+                @if($section->is_divider && !empty($section->children))
+                    <li class="cl-nav-divider">{{ $section->label }}</li>
+                @endif
+                @foreach($section->children as $item)
+                    @if($item->route_name)
+                    <li>
+                        <a href="{{ route($item->route_name) }}" class="{{ request()->routeIs(str_replace('.index', '.*', $item->route_name)) ? 'active' : '' }}">
+                            <i class="{{ $item->icon }}"></i> {{ $item->label }}
+                        </a>
+                    </li>
+                    @endif
+                @endforeach
+            @endforeach
         </ul>
         <div class="cl-sidebar-footer">
             <span class="cl-user-name">{{ auth()->user()->name }}</span>

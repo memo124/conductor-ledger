@@ -1,7 +1,7 @@
 $(function () {
     ConductorLedger.setupAjaxCsrf();
 
-    $('#btnLogout, #btnLogoutSidebar').on('click', function () {
+    $('#btnLogout, #btnLogoutMobile').on('click', function () {
         $.post(APLICATIVO_API.AUTHENTICATION.POST.LOGOUT)
             .done(function (res) {
                 window.location.href = res.redirect || APLICATIVO_API.AUTHENTICATION.GET.LOGIN;

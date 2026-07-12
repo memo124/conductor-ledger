@@ -16,18 +16,27 @@ class FinancialRecordService
     {
         $dek = $this->requireSessionDek();
 
+        $payload = [
+            'monto_bruto' => (float) ($amounts['monto_bruto'] ?? 0),
+            'comision_app' => (float) ($amounts['comision_app'] ?? 0),
+            'monto_cobrado' => (float) ($amounts['monto_cobrado'] ?? 0),
+            'propina' => (float) ($amounts['propina'] ?? 0),
+            'alquiler' => (float) ($amounts['alquiler'] ?? 0),
+            'porcentaje_cuota' => (float) ($amounts['porcentaje_cuota'] ?? 0),
+            'registration_mode' => $amounts['registration_mode'] ?? 'per_trip',
+        ];
+
         return [
-            'encrypted_payload' => $this->encryption->encryptPayload($dek, [
-                'indrive' => (float) ($amounts['indrive'] ?? 0),
-                'otros_viajes' => (float) ($amounts['otros_viajes'] ?? 0),
-                'propina' => (float) ($amounts['propina'] ?? 0),
-                'alquiler' => (float) ($amounts['alquiler'] ?? 0),
-            ]),
-            'encryption_version' => 1,
+            'encrypted_payload' => $this->encryption->encryptPayload($dek, $payload),
+            'encryption_version' => 2,
             'indrive' => 0,
             'otros_viajes' => 0,
             'propina' => 0,
             'alquiler' => 0,
+            'monto_bruto' => 0,
+            'comision_app' => 0,
+            'monto_cobrado' => 0,
+            'porcentaje_cuota' => 0,
         ];
     }
 
@@ -48,26 +57,76 @@ class FinancialRecordService
 
     public function decryptTripRow(object $row, ?string $dek = null): array
     {
-        if ((int) ($row->encryption_version ?? 0) === 1 && ! empty($row->encrypted_payload)) {
+        $version = (int) ($row->encryption_version ?? 0);
+
+        if ($version >= 2 && ! empty($row->encrypted_payload)) {
             $payload = $this->encryption->decryptPayload(
                 $dek ?? $this->requireSessionDek(),
                 $row->encrypted_payload
             );
 
             return [
-                'indrive' => (float) ($payload['indrive'] ?? 0),
-                'otros_viajes' => (float) ($payload['otros_viajes'] ?? 0),
+                'monto_bruto' => (float) ($payload['monto_bruto'] ?? 0),
+                'comision_app' => (float) ($payload['comision_app'] ?? 0),
+                'monto_cobrado' => (float) ($payload['monto_cobrado'] ?? 0),
                 'propina' => (float) ($payload['propina'] ?? 0),
                 'alquiler' => (float) ($payload['alquiler'] ?? 0),
+                'porcentaje_cuota' => (float) ($payload['porcentaje_cuota'] ?? 0),
+                'registration_mode' => $payload['registration_mode'] ?? ($row->registration_mode ?? 'per_trip'),
             ];
         }
 
+        if ($version === 1 && ! empty($row->encrypted_payload)) {
+            $payload = $this->encryption->decryptPayload(
+                $dek ?? $this->requireSessionDek(),
+                $row->encrypted_payload
+            );
+
+            $indrive = (float) ($payload['indrive'] ?? 0);
+            $otros = (float) ($payload['otros_viajes'] ?? 0);
+
+            return [
+                'monto_bruto' => $indrive + $otros,
+                'comision_app' => 0,
+                'monto_cobrado' => 0,
+                'propina' => (float) ($payload['propina'] ?? 0),
+                'alquiler' => (float) ($payload['alquiler'] ?? 0),
+                'porcentaje_cuota' => 0,
+                'registration_mode' => 'daily',
+            ];
+        }
+
+        $indrive = (float) ($row->indrive ?? 0);
+        $otros = (float) ($row->otros_viajes ?? 0);
+
         return [
-            'indrive' => (float) ($row->indrive ?? 0),
-            'otros_viajes' => (float) ($row->otros_viajes ?? 0),
+            'monto_bruto' => $indrive + $otros,
+            'comision_app' => 0,
+            'monto_cobrado' => 0,
             'propina' => (float) ($row->propina ?? 0),
             'alquiler' => (float) ($row->alquiler ?? 0),
+            'porcentaje_cuota' => (float) ($row->porcentaje_cuota ?? 0),
+            'registration_mode' => $row->registration_mode ?? 'per_trip',
         ];
+    }
+
+    public function tripIngresos(array $amounts): float
+    {
+        $mode = $amounts['registration_mode'] ?? 'per_trip';
+
+        if (in_array($mode, ['daily', 'monthly'], true)) {
+            return (float) ($amounts['monto_bruto'] ?? 0)
+                - (float) ($amounts['comision_app'] ?? 0)
+                + (float) ($amounts['propina'] ?? 0);
+        }
+
+        return (float) ($amounts['monto_cobrado'] ?? 0)
+            + (float) ($amounts['propina'] ?? 0);
+    }
+
+    public function tripNeto(array $amounts): float
+    {
+        return $this->tripIngresos($amounts) - (float) ($amounts['alquiler'] ?? 0);
     }
 
     public function decryptExpenseRow(object $row, ?string $dek = null): array
@@ -126,10 +185,12 @@ class FinancialRecordService
 
                 return (object) [
                     'mes' => $mes,
-                    'total_indrive' => $totals['indrive'],
-                    'total_otros' => $totals['otros_viajes'],
+                    'total_ingresos' => $totals['ingresos'],
+                    'total_comision' => $totals['comision_app'],
                     'total_propinas' => $totals['propina'],
                     'total_alquiler' => $totals['alquiler'],
+                    'total_indrive' => $totals['ingresos'],
+                    'total_otros' => 0,
                 ];
             })
             ->sortKeys()
@@ -138,7 +199,13 @@ class FinancialRecordService
 
     public function chartMetrics(int $userId, int $anio, ?string $dek = null): array
     {
-        $trips = DB::table('trips')->where('user_id', $userId)->where('anio', $anio)->get();
+        $trips = DB::table('trips as t')
+            ->leftJoin('platforms as p', 'p.id', '=', 't.platform_id')
+            ->where('t.user_id', $userId)
+            ->where('t.anio', $anio)
+            ->select(['t.*', 'p.name as platform_name'])
+            ->get();
+
         $expenses = DB::table('expenses')->where('user_id', $userId)->where('anio', $anio)->get();
 
         $monthlyTrips = $trips->groupBy(fn ($row) => (int) date('n', strtotime($row->fecha)));
@@ -148,48 +215,54 @@ class FinancialRecordService
         $alquileres = [];
         $gastos = [];
         $netos = [];
-        $platformTotals = ['indrive' => 0.0, 'otros' => 0.0, 'propinas' => 0.0];
+        $platformTotals = [];
 
         for ($m = 1; $m <= 12; $m++) {
             $tripTotals = isset($monthlyTrips[$m])
                 ? $this->aggregateTripRows($monthlyTrips[$m], $dek)
-                : ['indrive' => 0, 'otros_viajes' => 0, 'propina' => 0, 'alquiler' => 0];
+                : ['ingresos' => 0, 'comision_app' => 0, 'propina' => 0, 'alquiler' => 0];
 
             $expenseTotal = isset($monthlyExpenses[$m])
                 ? $monthlyExpenses[$m]->sum(fn ($row) => $this->decryptExpenseRow($row, $dek)['monto'])
                 : 0.0;
 
-            $income = $tripTotals['indrive'] + $tripTotals['otros_viajes'] + $tripTotals['propina'];
+            $income = $tripTotals['ingresos'];
             $ingresos[] = round($income, 2);
             $alquileres[] = round($tripTotals['alquiler'], 2);
             $gastos[] = round($expenseTotal, 2);
             $netos[] = round($income - $tripTotals['alquiler'] - $expenseTotal, 2);
         }
 
-        $yearTripTotals = $this->aggregateTripRows($trips, $dek);
-        $platformTotals['indrive'] = $yearTripTotals['indrive'];
-        $platformTotals['otros'] = $yearTripTotals['otros_viajes'];
-        $platformTotals['propinas'] = $yearTripTotals['propina'];
+        foreach ($trips as $row) {
+            $amounts = $this->decryptTripRow($row, $dek);
+            $label = $row->platform_name ?? 'Otros';
+            $platformTotals[$label] = ($platformTotals[$label] ?? 0) + $this->tripIngresos($amounts);
+        }
 
-        $totalIngresos = $platformTotals['indrive'] + $platformTotals['otros'] + $platformTotals['propinas'];
-        $totalAlquiler = $yearTripTotals['alquiler'];
+        $yearTripTotals = $this->aggregateTripRows($trips, $dek);
         $totalGastos = $expenses->sum(fn ($row) => $this->decryptExpenseRow($row, $dek)['monto']);
+
+        $plataformas = [];
+        foreach ($platformTotals as $name => $total) {
+            $plataformas[$name] = round($total, 2);
+        }
+
+        if (empty($plataformas)) {
+            $plataformas = ['Sin datos' => 0];
+        }
 
         return [
             'ingresos' => $ingresos,
             'alquileres' => $alquileres,
             'gastos' => $gastos,
             'netos' => $netos,
-            'plataformas' => [
-                'InDrive' => round($platformTotals['indrive'], 2),
-                'Otros' => round($platformTotals['otros'], 2),
-                'Propinas' => round($platformTotals['propinas'], 2),
-            ],
+            'plataformas' => $plataformas,
             'totals' => [
-                'ingresos' => round($totalIngresos, 2),
-                'alquiler' => round($totalAlquiler, 2),
+                'ingresos' => round($yearTripTotals['ingresos'], 2),
+                'comision' => round($yearTripTotals['comision_app'], 2),
+                'alquiler' => round($yearTripTotals['alquiler'], 2),
                 'gastos' => round($totalGastos, 2),
-                'neto' => round($totalIngresos - $totalAlquiler - $totalGastos, 2),
+                'neto' => round($yearTripTotals['ingresos'] - $yearTripTotals['alquiler'] - $totalGastos, 2),
             ],
         ];
     }
@@ -197,17 +270,22 @@ class FinancialRecordService
     public function aggregateTripRows(Collection $rows, ?string $dek = null): array
     {
         $totals = [
-            'indrive' => 0.0,
-            'otros_viajes' => 0.0,
+            'ingresos' => 0.0,
+            'monto_bruto' => 0.0,
+            'comision_app' => 0.0,
+            'monto_cobrado' => 0.0,
             'propina' => 0.0,
             'alquiler' => 0.0,
         ];
 
         foreach ($rows as $row) {
             $amounts = $this->decryptTripRow($row, $dek);
-            foreach ($totals as $key => $value) {
-                $totals[$key] += $amounts[$key];
-            }
+            $totals['ingresos'] += $this->tripIngresos($amounts);
+            $totals['monto_bruto'] += $amounts['monto_bruto'];
+            $totals['comision_app'] += $amounts['comision_app'];
+            $totals['monto_cobrado'] += $amounts['monto_cobrado'];
+            $totals['propina'] += $amounts['propina'];
+            $totals['alquiler'] += $amounts['alquiler'];
         }
 
         return $totals;
@@ -217,16 +295,23 @@ class FinancialRecordService
     {
         return [
             'encrypted_payload' => $this->encryption->encryptPayload($dek, [
-                'indrive' => (float) $row->indrive,
-                'otros_viajes' => (float) $row->otros_viajes,
+                'monto_bruto' => (float) ($row->indrive ?? 0) + (float) ($row->otros_viajes ?? 0),
+                'comision_app' => 0,
+                'monto_cobrado' => 0,
                 'propina' => (float) $row->propina,
                 'alquiler' => (float) $row->alquiler,
+                'porcentaje_cuota' => 0,
+                'registration_mode' => 'daily',
             ]),
-            'encryption_version' => 1,
+            'encryption_version' => 2,
             'indrive' => 0,
             'otros_viajes' => 0,
             'propina' => 0,
             'alquiler' => 0,
+            'monto_bruto' => 0,
+            'comision_app' => 0,
+            'monto_cobrado' => 0,
+            'porcentaje_cuota' => 0,
         ];
     }
 

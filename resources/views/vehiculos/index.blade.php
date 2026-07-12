@@ -65,6 +65,17 @@
                             <small class="text-muted" id="rentalFeeHint">Monto según el periodo seleccionado. En viajes se sugerirá la cuota diaria equivalente.</small>
                         </div>
                     </div>
+                    <div class="row" id="quotaFields">
+                        <div class="col-12 col-md-6 mb-3">
+                            <label class="form-label">% del viaje para cuota</label>
+                            <input type="number" step="0.01" min="0" max="100" name="quota_percentage" class="form-control" value="0">
+                        </div>
+                        <div class="col-12 col-md-6 mb-3">
+                            <label class="form-label">Monto apartado ($)</label>
+                            <input type="number" step="0.01" min="0" name="quota_reserve_amount" class="form-control" value="0">
+                            <small class="text-muted">Si es 0, la sugerencia de cuota en viajes será 0</small>
+                        </div>
+                    </div>
                     <div class="mb-3" id="activeField" style="display:none;">
                         <label class="form-label">Estado</label>
                         <select name="is_active" class="form-select">

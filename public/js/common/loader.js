@@ -2,6 +2,7 @@ window.ConductorLedger = window.ConductorLedger || {};
 
 ConductorLedger._ajaxLoaderCount = 0;
 ConductorLedger._ajaxLoaderTimer = null;
+ConductorLedger._ajaxLoaderSafetyTimer = null;
 ConductorLedger._pendingLoaderButton = null;
 
 ConductorLedger.silentAjaxPatterns = [
@@ -117,6 +118,45 @@ ConductorLedger.resolveLoaderButton = function (settings) {
     return null;
 };
 
+ConductorLedger.finishAjaxLoader = function (settings) {
+    if (settings.clLoaderFinished) {
+        return;
+    }
+    settings.clLoaderFinished = true;
+
+    if (ConductorLedger.isSilentAjax(settings)) {
+        return;
+    }
+
+    ConductorLedger._ajaxLoaderCount = Math.max(0, ConductorLedger._ajaxLoaderCount - 1);
+
+    if (settings.clButton) {
+        ConductorLedger.setButtonLoading($(settings.clButton), false);
+    }
+
+    if (ConductorLedger._ajaxLoaderCount === 0) {
+        window.clearTimeout(ConductorLedger._ajaxLoaderTimer);
+        window.clearTimeout(ConductorLedger._ajaxLoaderSafetyTimer);
+        ConductorLedger._ajaxLoaderSafetyTimer = null;
+        ConductorLedger.hideLoader();
+        ConductorLedger._pendingLoaderButton = null;
+    }
+};
+
+ConductorLedger.resetAjaxLoader = function () {
+    ConductorLedger._ajaxLoaderCount = 0;
+    window.clearTimeout(ConductorLedger._ajaxLoaderTimer);
+    window.clearTimeout(ConductorLedger._ajaxLoaderSafetyTimer);
+    ConductorLedger._ajaxLoaderSafetyTimer = null;
+    ConductorLedger.hideLoader();
+    ConductorLedger._pendingLoaderButton = null;
+    $('[data-cl-loading], button, input[type="submit"], a.btn').each(function () {
+        if ($(this).data('cl-loading')) {
+            ConductorLedger.setButtonLoading($(this), false);
+        }
+    });
+};
+
 ConductorLedger.setupAjaxLoader = function () {
     $(document).on('submit', 'form', function () {
         $(this).attr('data-cl-submit-pending', '1');
@@ -151,25 +191,21 @@ ConductorLedger.setupAjaxLoader = function () {
             ConductorLedger._ajaxLoaderTimer = window.setTimeout(function () {
                 ConductorLedger.showLoader(settings.clLoaderMessage || 'Cargando...');
             }, 300);
+
+            ConductorLedger._ajaxLoaderSafetyTimer = window.setTimeout(function () {
+                if (ConductorLedger._ajaxLoaderCount > 0) {
+                    ConductorLedger.resetAjaxLoader();
+                }
+            }, 30000);
         }
     });
 
     $(document).ajaxComplete(function (event, xhr, settings) {
-        if (ConductorLedger.isSilentAjax(settings)) {
-            return;
-        }
+        ConductorLedger.finishAjaxLoader(settings);
+    });
 
-        ConductorLedger._ajaxLoaderCount = Math.max(0, ConductorLedger._ajaxLoaderCount - 1);
-
-        if (settings.clButton) {
-            ConductorLedger.setButtonLoading($(settings.clButton), false);
-        }
-
-        if (ConductorLedger._ajaxLoaderCount === 0) {
-            window.clearTimeout(ConductorLedger._ajaxLoaderTimer);
-            ConductorLedger.hideLoader();
-            ConductorLedger._pendingLoaderButton = null;
-        }
+    $(document).ajaxError(function (event, xhr, settings) {
+        ConductorLedger.finishAjaxLoader(settings);
     });
 };
 

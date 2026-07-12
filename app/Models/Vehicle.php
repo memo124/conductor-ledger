@@ -13,6 +13,8 @@ class Vehicle extends Model
         'plate_number',
         'rental_fee_daily',
         'rental_period',
+        'quota_percentage',
+        'quota_reserve_amount',
         'is_active',
     ];
 
@@ -20,6 +22,8 @@ class Vehicle extends Model
     {
         return [
             'rental_fee_daily' => 'decimal:2',
+            'quota_percentage' => 'decimal:2',
+            'quota_reserve_amount' => 'decimal:2',
             'is_active' => 'boolean',
         ];
     }

@@ -23,7 +23,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">DUI</label>
-                    <input type="text" name="dui" class="form-control" maxlength="10" value="{{ $user->dui }}" required>
+                    <input type="text" name="dui" class="form-control" maxlength="10" value="{{ $user->dui }}" placeholder="Opcional">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Tema</label>

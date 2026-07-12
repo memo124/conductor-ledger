@@ -40,6 +40,8 @@ class AppOptionSeeder extends Seeder
                 'children' => [
                     ['slug' => 'tipos-propiedad', 'label' => 'Tipos Propiedad', 'route_name' => 'tipos-propiedad.index', 'icon' => 'fa-solid fa-key', 'sort_order' => 1],
                     ['slug' => 'categorias-gasto', 'label' => 'Categorías Gasto', 'route_name' => 'categorias-gasto.index', 'icon' => 'fa-solid fa-tags', 'sort_order' => 2],
+                    ['slug' => 'plataformas', 'label' => 'Plataformas', 'route_name' => 'plataformas.index', 'icon' => 'fa-solid fa-mobile-screen', 'sort_order' => 3],
+                    ['slug' => 'tipos-viaje', 'label' => 'Tipos de Viaje', 'route_name' => 'tipos-viaje.index', 'icon' => 'fa-solid fa-route', 'sort_order' => 4],
                 ],
             ],
             [
@@ -60,8 +62,9 @@ class AppOptionSeeder extends Seeder
                 'sort_order' => 4,
                 'children' => [
                     ['slug' => 'usuarios', 'label' => 'Usuarios', 'route_name' => 'usuarios.index', 'icon' => 'fa-solid fa-users-gear', 'sort_order' => 1],
-                    ['slug' => 'admin.backups', 'label' => 'Respaldos', 'route_name' => 'admin.backups.index', 'icon' => 'fa-solid fa-database', 'sort_order' => 2],
-                    ['slug' => 'admin.emergency-decrypt', 'label' => 'Descifrado emergencia', 'route_name' => 'admin.emergency-decrypt.index', 'icon' => 'fa-solid fa-unlock-keyhole', 'sort_order' => 3],
+                    ['slug' => 'admin.permisos', 'label' => 'Permisos', 'route_name' => 'admin.permisos.index', 'icon' => 'fa-solid fa-user-shield', 'sort_order' => 2],
+                    ['slug' => 'admin.backups', 'label' => 'Respaldos', 'route_name' => 'admin.backups.index', 'icon' => 'fa-solid fa-database', 'sort_order' => 3],
+                    ['slug' => 'admin.emergency-decrypt', 'label' => 'Descifrado emergencia', 'route_name' => 'admin.emergency-decrypt.index', 'icon' => 'fa-solid fa-unlock-keyhole', 'sort_order' => 4],
                 ],
             ],
         ];

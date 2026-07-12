@@ -60,7 +60,8 @@ const APLICATIVO_API = {
             DATATABLE: '/Viajes/GetDatatableServerSide',
             COMPARATIVA_MENSUAL: '/Viajes/GetComparativaMensual',
             RENTAL_SUGGESTION: '/Viajes/GetRentalSuggestion',
-            SELECT2: '/Viajes/Select2Paginated'
+            SELECT2: '/Viajes/Select2Paginated',
+            SELECT2_PLATFORMS: '/Viajes/Select2Platforms'
         },
         POST: {
             STORE: '/Viajes/Store'
@@ -113,6 +114,36 @@ const APLICATIVO_API = {
         },
         PUT: {
             UPDATE: '/Maestros/CategoriasGasto/Update'
+        }
+    },
+    PLATAFORMAS: {
+        GET: {
+            DATATABLE: '/Maestros/Plataformas/GetDatatableServerSide'
+        },
+        POST: {
+            STORE: '/Maestros/Plataformas/Store'
+        },
+        PUT: {
+            UPDATE: '/Maestros/Plataformas/Update'
+        }
+    },
+    TIPOS_VIAJE: {
+        GET: {
+            DATATABLE: '/Maestros/TiposViaje/GetDatatableServerSide'
+        },
+        POST: {
+            STORE: '/Maestros/TiposViaje/Store'
+        },
+        PUT: {
+            UPDATE: '/Maestros/TiposViaje/Update'
+        }
+    },
+    PERMISOS: {
+        GET: {
+            MATRIX: '/Administracion/Permisos/GetMatrix'
+        },
+        PUT: {
+            UPDATE: '/Administracion/Permisos/Update'
         }
     }
 };

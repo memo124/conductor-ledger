@@ -13,10 +13,41 @@ $(function () {
         dropdownParent: $('#modalNuevoGasto')
     });
 
+    ConductorLedger.initSelect2Paginated($('#filterVehicle'), {
+        url: APLICATIVO_API.GASTOS.GET.SELECT2_VEHICLES,
+        placeholder: 'Todos los vehículos...',
+        allowClear: true
+    });
+
+    function filterParams() {
+        return {
+            fecha_desde: $('#filterFechaDesde').val(),
+            fecha_hasta: $('#filterFechaHasta').val(),
+            category_id: $('#filterCategory').val(),
+            vehicle_id: $('#filterVehicle').val()
+        };
+    }
+
+    function updateTotals(totals) {
+        if (!totals) {
+            $('#gastosTotals').hide();
+            return;
+        }
+        $('#gastosTotals').show();
+        $('#totalMonto').text('$' + totals.monto);
+    }
+
     var table = $('#tblGastos').DataTable($.extend(true, {}, ConductorLedger.defaultDataTableOptions, {
         ajax: {
             url: APLICATIVO_API.GASTOS.GET.DATATABLE,
-            type: 'GET'
+            type: 'GET',
+            data: function (d) {
+                return $.extend({}, d, filterParams());
+            },
+            dataSrc: function (json) {
+                updateTotals(json.totals);
+                return json.data;
+            }
         },
         order: [[1, 'desc']],
         columns: [
@@ -28,6 +59,11 @@ $(function () {
             { data: 'descripcion' }
         ]
     }));
+
+    $('#formFiltrosGastos').on('submit', function (e) {
+        e.preventDefault();
+        table.ajax.reload();
+    });
 
     $('#formNuevoGasto').on('submit', function (e) {
         e.preventDefault();

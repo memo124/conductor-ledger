@@ -9,8 +9,11 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GastosController;
 use App\Http\Controllers\GraficosController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\PermisosController;
+use App\Http\Controllers\PlataformasController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\TiposPropiedadController;
+use App\Http\Controllers\TiposViajeController;
 use App\Http\Controllers\UsuariosController;
 use App\Http\Controllers\VehiculosController;
 use App\Http\Controllers\ViajesController;
@@ -58,6 +61,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/Viajes/GetComparativaMensual', [ViajesController::class, 'getComparativaMensual']);
         Route::get('/Viajes/GetRentalSuggestion', [ViajesController::class, 'getRentalSuggestion']);
         Route::get('/Viajes/Select2Paginated', [ViajesController::class, 'select2Paginated']);
+        Route::get('/Viajes/Select2Platforms', [ViajesController::class, 'select2Platforms']);
         Route::post('/Viajes/Store', [ViajesController::class, 'store']);
     });
 
@@ -91,12 +95,32 @@ Route::middleware('auth')->group(function () {
         Route::put('/Maestros/CategoriasGasto/Update/{id}', [CategoriasGastoController::class, 'update']);
     });
 
+    Route::middleware('permission:plataformas')->group(function () {
+        Route::get('/Maestros/Plataformas', [PlataformasController::class, 'index'])->name('plataformas.index');
+        Route::get('/Maestros/Plataformas/GetDatatableServerSide', [PlataformasController::class, 'getDatatableServerSide']);
+        Route::post('/Maestros/Plataformas/Store', [PlataformasController::class, 'store']);
+        Route::put('/Maestros/Plataformas/Update/{id}', [PlataformasController::class, 'update']);
+    });
+
+    Route::middleware('permission:tipos-viaje')->group(function () {
+        Route::get('/Maestros/TiposViaje', [TiposViajeController::class, 'index'])->name('tipos-viaje.index');
+        Route::get('/Maestros/TiposViaje/GetDatatableServerSide', [TiposViajeController::class, 'getDatatableServerSide']);
+        Route::post('/Maestros/TiposViaje/Store', [TiposViajeController::class, 'store']);
+        Route::put('/Maestros/TiposViaje/Update/{id}', [TiposViajeController::class, 'update']);
+    });
+
     Route::middleware('permission:usuarios')->group(function () {
         Route::get('/Usuarios', [UsuariosController::class, 'index'])->name('usuarios.index');
         Route::get('/Usuarios/GetDatatableServerSide', [UsuariosController::class, 'getDatatableServerSide']);
         Route::post('/Usuarios/Store', [UsuariosController::class, 'store']);
         Route::put('/Usuarios/Update/{id}', [UsuariosController::class, 'update']);
         Route::delete('/Usuarios/Delete/{id}', [UsuariosController::class, 'destroy']);
+    });
+
+    Route::middleware('permission:admin.permisos')->group(function () {
+        Route::get('/Administracion/Permisos', [PermisosController::class, 'index'])->name('admin.permisos.index');
+        Route::get('/Administracion/Permisos/GetMatrix', [PermisosController::class, 'getMatrix']);
+        Route::put('/Administracion/Permisos/Update', [PermisosController::class, 'update']);
     });
 
     Route::middleware('permission:admin.backups')->group(function () {

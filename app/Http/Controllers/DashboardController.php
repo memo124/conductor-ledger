@@ -26,14 +26,16 @@ class DashboardController extends Controller
         $tripTotals = $this->financialRecords->monthlyTripTotals($userId, $anio, $mes);
         $gastos = $this->financialRecords->monthlyExpenseTotal($userId, $anio, $mes);
 
-        $ingresos = $tripTotals['indrive'] + $tripTotals['otros_viajes'] + $tripTotals['propina'];
+        $ingresos = $tripTotals['ingresos'];
         $alquiler = $tripTotals['alquiler'];
+        $comision = $tripTotals['comision_app'];
         $neto = $ingresos - $alquiler - $gastos;
 
         return response()->json([
             'success' => true,
             'data' => [
                 'ingresos' => number_format($ingresos, 2),
+                'comision' => number_format($comision, 2),
                 'alquiler' => number_format($alquiler, 2),
                 'gastos' => number_format($gastos, 2),
                 'neto' => number_format($neto, 2),

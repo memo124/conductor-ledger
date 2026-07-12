@@ -29,7 +29,7 @@ class RolePermissionSeeder extends Seeder
 
         $conductorSlugs = [
             'dashboard', 'viajes', 'gastos', 'vehiculos', 'graficos',
-            'tipos-propiedad', 'categorias-gasto', 'perfil',
+            'tipos-propiedad', 'categorias-gasto', 'plataformas', 'tipos-viaje', 'perfil',
         ];
 
         $adminSlugs = AppOption::query()->pluck('slug')->all();

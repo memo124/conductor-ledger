@@ -51,6 +51,10 @@ class VehiculosController extends Controller
             'rental_fee_raw' => (float) $v->rental_fee_daily,
             'rental_period' => $periodLabels[$v->rental_period ?? 'daily'] ?? 'Diario',
             'rental_period_code' => $v->rental_period ?? 'daily',
+            'quota_percentage' => number_format((float) $v->quota_percentage, 2),
+            'quota_percentage_raw' => (float) $v->quota_percentage,
+            'quota_reserve_amount' => number_format((float) $v->quota_reserve_amount, 2),
+            'quota_reserve_raw' => (float) $v->quota_reserve_amount,
             'is_active' => $v->is_active ? 'Activo' : 'Inactivo',
             'is_active_bool' => $v->is_active,
         ]);
@@ -88,6 +92,8 @@ class VehiculosController extends Controller
             'plate_number' => ['required', 'string', 'max:15'],
             'rental_fee_daily' => ['nullable', 'numeric', 'min:0'],
             'rental_period' => ['nullable', 'in:daily,weekly,biweekly,monthly'],
+            'quota_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'quota_reserve_amount' => ['nullable', 'numeric', 'min:0'],
         ], $this->validationMessages());
 
         $ownershipType = VehicleOwnershipType::query()->findOrFail($validated['ownership_type_id']);
@@ -107,6 +113,8 @@ class VehiculosController extends Controller
             'plate_number' => $validated['plate_number'],
             'rental_fee_daily' => $requiresFee ? ($validated['rental_fee_daily'] ?? 0) : 0,
             'rental_period' => $requiresFee ? ($validated['rental_period'] ?? 'daily') : 'daily',
+            'quota_percentage' => (float) ($validated['quota_percentage'] ?? 0),
+            'quota_reserve_amount' => (float) ($validated['quota_reserve_amount'] ?? 0),
             'is_active' => true,
         ]);
 
@@ -130,6 +138,8 @@ class VehiculosController extends Controller
             'plate_number' => ['required', 'string', 'max:15'],
             'rental_fee_daily' => ['nullable', 'numeric', 'min:0'],
             'rental_period' => ['nullable', 'in:daily,weekly,biweekly,monthly'],
+            'quota_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'quota_reserve_amount' => ['nullable', 'numeric', 'min:0'],
             'is_active' => ['required', 'boolean'],
         ], $this->validationMessages());
 
@@ -149,6 +159,8 @@ class VehiculosController extends Controller
             'plate_number' => $validated['plate_number'],
             'rental_fee_daily' => $requiresFee ? ($validated['rental_fee_daily'] ?? 0) : 0,
             'rental_period' => $requiresFee ? ($validated['rental_period'] ?? 'daily') : 'daily',
+            'quota_percentage' => (float) ($validated['quota_percentage'] ?? 0),
+            'quota_reserve_amount' => (float) ($validated['quota_reserve_amount'] ?? 0),
             'is_active' => $validated['is_active'],
         ]);
 

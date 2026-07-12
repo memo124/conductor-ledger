@@ -18,6 +18,8 @@ $(function () {
     var $rentalPeriodLabel = $('#rentalPeriodLabel');
     var $rentalFeeLabel = $('#rentalFeeLabel');
     var $rentalFeeHint = $('#rentalFeeHint');
+    var $quotaPercentage = $('input[name="quota_percentage"]');
+    var $quotaReserve = $('input[name="quota_reserve_amount"]');
 
     var FEE_TYPES = ['ALQUILADO', 'FINANCIADO'];
 
@@ -80,6 +82,8 @@ $(function () {
         $('#vehicleId').val('');
         $('#formVehiculo')[0].reset();
         $('#selectOwnership').val(null).trigger('change');
+        $quotaPercentage.val(0);
+        $quotaReserve.val(0);
         $activeField.hide();
         toggleRentalFields(false);
         modal.show();
@@ -130,6 +134,9 @@ $(function () {
             $rentalPeriod.val(row.rental_period_code);
             $rentalFee.val(row.rental_fee_raw > 0 ? row.rental_fee_raw : '');
         }
+
+        $quotaPercentage.val(row.quota_percentage_raw ?? 0);
+        $quotaReserve.val(row.quota_reserve_raw ?? 0);
         modal.show();
     });
 

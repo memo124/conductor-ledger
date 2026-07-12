@@ -23,6 +23,24 @@ return new class extends Migration
             )
         ");
 
+        DB::statement("
+            CREATE TABLE trip_types (
+                id SERIAL PRIMARY KEY,
+                code VARCHAR(30) UNIQUE NOT NULL,
+                name VARCHAR(80) NOT NULL,
+                allowed_modes VARCHAR(100) NOT NULL DEFAULT 'per_trip',
+                is_active BOOLEAN DEFAULT TRUE
+            )
+        ");
+
+        DB::statement("
+            CREATE TABLE platforms (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(50) UNIQUE NOT NULL,
+                is_active BOOLEAN DEFAULT TRUE
+            )
+        ");
+
         Schema::create('vehicles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
@@ -59,6 +77,11 @@ return new class extends Migration
                 uuid UUID NOT NULL,
                 user_id BIGINT NOT NULL,
                 vehicle_id BIGINT NOT NULL,
+                trip_type_id INT NOT NULL REFERENCES trip_types(id),
+                platform_id INT NULL REFERENCES platforms(id),
+                registration_mode VARCHAR(10) NOT NULL DEFAULT 'per_trip',
+                period_year INT NULL,
+                period_month INT NULL,
                 anio INT NOT NULL,
                 trip_number INT NOT NULL,
                 fecha DATE NOT NULL,
@@ -67,6 +90,10 @@ return new class extends Migration
                 otros_viajes DECIMAL(10, 2) DEFAULT 0.00,
                 propina DECIMAL(10, 2) DEFAULT 0.00,
                 alquiler DECIMAL(10, 2) DEFAULT 0.00,
+                monto_bruto DECIMAL(10, 2) DEFAULT 0.00,
+                comision_app DECIMAL(10, 2) DEFAULT 0.00,
+                monto_cobrado DECIMAL(10, 2) DEFAULT 0.00,
+                porcentaje_cuota DECIMAL(5, 2) DEFAULT 0.00,
                 created_at TIMESTAMP WITHOUT TIME ZONE NULL,
                 updated_at TIMESTAMP WITHOUT TIME ZONE NULL,
                 PRIMARY KEY (user_id, anio, trip_number, uuid, fecha)
@@ -112,10 +139,13 @@ return new class extends Migration
         });
 
         DB::statement('CREATE INDEX idx_trips_search ON trips (user_id, fecha, vehicle_id)');
+        DB::statement('CREATE INDEX idx_trips_filters ON trips (user_id, fecha, trip_type_id, platform_id, registration_mode)');
         DB::statement('CREATE INDEX idx_expenses_search ON expenses (user_id, fecha, vehicle_id)');
 
         (new \Database\Seeders\VehicleOwnershipTypeSeeder)->run();
         (new \Database\Seeders\ExpenseCategorySeeder)->run();
+        (new \Database\Seeders\TripTypeSeeder)->run();
+        (new \Database\Seeders\PlatformSeeder)->run();
     }
 
     public function down(): void
@@ -126,6 +156,8 @@ return new class extends Migration
         Schema::dropIfExists('yearly_counters');
         Schema::dropIfExists('user_sessions');
         Schema::dropIfExists('vehicles');
+        DB::statement('DROP TABLE IF EXISTS platforms CASCADE');
+        DB::statement('DROP TABLE IF EXISTS trip_types CASCADE');
         DB::statement('DROP TABLE IF EXISTS expense_categories CASCADE');
         DB::statement('DROP TABLE IF EXISTS vehicle_ownership_types CASCADE');
     }

@@ -20,24 +20,30 @@ class ExportController extends Controller
         $userId = Auth::id();
         $anio = (int) $request->query('anio', date('Y'));
 
-        $rows = DB::table('trips')
-            ->where('user_id', $userId)
-            ->where('anio', $anio)
-            ->orderByDesc('fecha')
-            ->orderByDesc('trip_number')
+        $rows = DB::table('trips as t')
+            ->leftJoin('trip_types as tt', 'tt.id', '=', 't.trip_type_id')
+            ->leftJoin('platforms as p', 'p.id', '=', 't.platform_id')
+            ->where('t.user_id', $userId)
+            ->where('t.anio', $anio)
+            ->select(['t.*', 'tt.name as trip_type_name', 'p.name as platform_name'])
+            ->orderByDesc('t.fecha')
+            ->orderByDesc('t.trip_number')
             ->get();
 
-        $headers = ['#', 'Fecha', 'Día', 'InDrive', 'Otros', 'Propina', 'Alquiler', 'Ingresos', 'Neto'];
+        $headers = ['#', 'Fecha', 'Tipo', 'Plataforma', 'Modo', 'Bruto', 'Comisión', 'Cobrado', 'Propina', 'Alquiler', 'Ingresos', 'Neto'];
         $data = $rows->map(function ($row) {
             $amounts = $this->financialRecords->decryptTripRow($row);
-            $ingresos = $amounts['indrive'] + $amounts['otros_viajes'] + $amounts['propina'];
+            $ingresos = $this->financialRecords->tripIngresos($amounts);
 
             return [
                 $row->trip_number,
                 $row->fecha,
-                $row->dia_semana,
-                number_format($amounts['indrive'], 2, '.', ''),
-                number_format($amounts['otros_viajes'], 2, '.', ''),
+                $row->trip_type_name ?? '—',
+                $row->platform_name ?? '—',
+                $row->registration_mode,
+                number_format($amounts['monto_bruto'], 2, '.', ''),
+                number_format($amounts['comision_app'], 2, '.', ''),
+                number_format($amounts['monto_cobrado'], 2, '.', ''),
                 number_format($amounts['propina'], 2, '.', ''),
                 number_format($amounts['alquiler'], 2, '.', ''),
                 number_format($ingresos, 2, '.', ''),
@@ -111,7 +117,8 @@ class ExportController extends Controller
         $anio = (int) $request->query('anio', date('Y'));
 
         $tripTotals = $this->financialRecords->monthlyTripTotals($userId, $anio);
-        $ingresos = $tripTotals['indrive'] + $tripTotals['otros_viajes'] + $tripTotals['propina'];
+        $ingresos = $tripTotals['ingresos'];
+        $comision = $tripTotals['comision_app'];
         $alquiler = $tripTotals['alquiler'];
         $gastos = $this->financialRecords->monthlyExpenseTotal($userId, $anio);
         $neto = $ingresos - $alquiler - $gastos;
@@ -119,7 +126,8 @@ class ExportController extends Controller
         $headers = ['Concepto', 'Monto'];
         $data = [
             ['Ingresos', number_format($ingresos, 2, '.', '')],
-            ['Alquiler', number_format($alquiler, 2, '.', '')],
+            ['Comisión app', number_format($comision, 2, '.', '')],
+            ['Alquiler / cuota', number_format($alquiler, 2, '.', '')],
             ['Gastos', number_format($gastos, 2, '.', '')],
             ['Ganancia neta', number_format($neto, 2, '.', '')],
         ];

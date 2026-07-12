@@ -19,6 +19,42 @@
     </div>
 </div>
 
+<div class="cl-card mb-3">
+    <form id="formFiltrosGastos" class="row g-2 align-items-end">
+        <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label">Desde</label>
+            <input type="date" name="fecha_desde" id="filterFechaDesde" class="form-control form-control-sm">
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label">Hasta</label>
+            <input type="date" name="fecha_hasta" id="filterFechaHasta" class="form-control form-control-sm">
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label">Categoría</label>
+            <select name="category_id" id="filterCategory" class="form-select form-select-sm">
+                <option value="">Todas</option>
+                @foreach(\App\Models\ExpenseCategory::orderBy('name')->get() as $category)
+                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <label class="form-label">Vehículo</label>
+            <select name="vehicle_id" id="filterVehicle" class="form-select form-select-sm"></select>
+        </div>
+        <div class="col-12 col-lg-auto">
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-filter"></i> Filtrar</button>
+        </div>
+    </form>
+</div>
+
+<div id="gastosTotals" class="cl-card mb-3" style="display:none;">
+    <div class="text-center">
+        <small class="text-muted d-block">Total gastos (filtro actual)</small>
+        <strong class="text-expense fs-5" id="totalMonto">$0.00</strong>
+    </div>
+</div>
+
 <div class="cl-card">
     <div class="table-responsive">
         <table id="tblGastos" class="table table-striped w-100">

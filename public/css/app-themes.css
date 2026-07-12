@@ -81,6 +81,8 @@ body.cl-body {
     padding: 1rem 0;
     margin: 0;
     flex: 1;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 .cl-nav li a {
@@ -112,6 +114,11 @@ body.cl-body {
 .cl-sidebar-footer {
     padding: 1rem 1.25rem;
     border-top: 1px solid var(--cl-border);
+    flex-shrink: 0;
+}
+
+.cl-mobile-logout {
+    margin-left: auto;
 }
 
 .cl-user-name {

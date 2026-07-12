@@ -117,16 +117,27 @@ class GastosController extends Controller
         $length = min((int) $request->input('length', 10), 100);
         $search = trim((string) $request->input('search.value', ''));
 
+        $fechaDesde = $request->input('fecha_desde');
+        $fechaHasta = $request->input('fecha_hasta');
+        $categoryId = $request->input('category_id');
+        $vehicleId = $request->input('vehicle_id');
+
         $baseQuery = DB::table('expenses as e')
             ->join('expense_categories as c', 'c.id', '=', 'e.category_id')
             ->leftJoin('vehicles as v', 'v.id', '=', 'e.vehicle_id')
             ->where('e.user_id', $userId)
+            ->when($fechaDesde, fn ($q) => $q->where('e.fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn ($q) => $q->where('e.fecha', '<=', $fechaHasta))
+            ->when($categoryId, fn ($q) => $q->where('e.category_id', $categoryId))
+            ->when($vehicleId, fn ($q) => $q->where('e.vehicle_id', $vehicleId))
             ->select([
                 'e.expense_number',
                 'e.fecha',
                 'c.name as categoria',
                 'e.monto',
                 'e.descripcion',
+                'e.encrypted_payload',
+                'e.encryption_version',
                 'v.plate_number',
             ])
             ->when($search !== '', function ($query) use ($search) {
@@ -140,6 +151,10 @@ class GastosController extends Controller
         $countQuery = DB::table('expenses as e')
             ->join('expense_categories as c', 'c.id', '=', 'e.category_id')
             ->where('e.user_id', $userId)
+            ->when($fechaDesde, fn ($q) => $q->where('e.fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn ($q) => $q->where('e.fecha', '<=', $fechaHasta))
+            ->when($categoryId, fn ($q) => $q->where('e.category_id', $categoryId))
+            ->when($vehicleId, fn ($q) => $q->where('e.vehicle_id', $vehicleId))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('c.name', 'ilike', "%{$search}%")
@@ -157,6 +172,14 @@ class GastosController extends Controller
             ->offset($start)
             ->limit($length)
             ->get();
+
+        $totalMonto = 0.0;
+        $allFiltered = (clone $countQuery)
+            ->select(['e.monto', 'e.descripcion', 'e.encrypted_payload', 'e.encryption_version'])
+            ->get();
+        foreach ($allFiltered as $row) {
+            $totalMonto += $this->financialRecords->decryptExpenseRow($row)['monto'];
+        }
 
         $data = $rows->map(function ($row) {
             $amounts = $this->financialRecords->decryptExpenseRow($row);
@@ -176,6 +199,9 @@ class GastosController extends Controller
             'recordsTotal' => $recordsTotal,
             'recordsFiltered' => $recordsFiltered,
             'data' => $data,
+            'totals' => [
+                'monto' => number_format($totalMonto, 2),
+            ],
         ]);
     }
 }

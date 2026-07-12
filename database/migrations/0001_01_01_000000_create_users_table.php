@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->string('dui', 10)->unique();
+            $table->string('dui', 10)->nullable()->unique();
             $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamps();

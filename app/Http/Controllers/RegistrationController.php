@@ -32,14 +32,13 @@ class RegistrationController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'dui' => ['required', 'string', 'max:10', 'unique:users,dui'],
+            'dui' => ['nullable', 'string', 'max:10', 'unique:users,dui'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ], [
             'name.required' => 'El nombre es obligatorio.',
             'email.required' => 'El correo es obligatorio.',
             'email.email' => 'Ingrese un correo válido.',
             'email.unique' => 'Este correo ya está registrado. Use otro o inicie sesión.',
-            'dui.required' => 'El DUI es obligatorio.',
             'dui.unique' => 'Este DUI ya está registrado.',
             'password.required' => 'La contraseña es obligatoria.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
@@ -52,7 +51,7 @@ class RegistrationController extends Controller
             $user = User::query()->create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
-                'dui' => $validated['dui'],
+                'dui' => $validated['dui'] ?: null,
                 'password' => Hash::make($validated['password']),
                 'is_active' => config('conductor-ledger.registration_mode') === 'approval' ? false : true,
                 'role' => 'user',

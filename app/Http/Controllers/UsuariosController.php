@@ -76,7 +76,7 @@ class UsuariosController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'dui' => ['required', 'string', 'max:10', 'unique:users,dui'],
+            'dui' => ['nullable', 'string', 'max:10', 'unique:users,dui'],
             'password' => ['required', 'string', 'min:8'],
             'role' => ['required', 'in:admin,user'],
             'is_active' => ['required', 'boolean'],
@@ -87,7 +87,7 @@ class UsuariosController extends Controller
         $user = User::query()->create([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'dui' => $validated['dui'],
+            'dui' => $validated['dui'] ?: null,
             'password' => Hash::make($validated['password']),
             'is_active' => $validated['is_active'],
             'role' => $validated['role'],
@@ -135,7 +135,7 @@ class UsuariosController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'dui' => ['required', 'string', 'max:10', Rule::unique('users', 'dui')->ignore($user->id)],
+            'dui' => ['nullable', 'string', 'max:10', Rule::unique('users', 'dui')->ignore($user->id)],
             'password' => ['nullable', 'string', 'min:8'],
             'role' => ['required', 'in:admin,user'],
             'is_active' => ['required', 'boolean'],
@@ -156,6 +156,7 @@ class UsuariosController extends Controller
         }
 
         $payload = collect($validated)->except('password')->all();
+        $payload['dui'] = ! empty($validated['dui']) ? $validated['dui'] : null;
 
         if (! empty($validated['password'])) {
             $payload['password'] = Hash::make($validated['password']);
@@ -254,7 +255,6 @@ class UsuariosController extends Controller
             'email.required' => 'El correo es obligatorio.',
             'email.email' => 'Ingrese un correo válido.',
             'email.unique' => 'Este correo ya está registrado.',
-            'dui.required' => 'El DUI es obligatorio.',
             'dui.unique' => 'Este DUI ya está registrado.',
             'password.required' => 'La contraseña es obligatoria.',
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.',

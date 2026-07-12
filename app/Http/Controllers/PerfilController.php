@@ -27,10 +27,11 @@ class PerfilController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'dui' => ['required', 'string', 'max:10', Rule::unique('users', 'dui')->ignore($user->id)],
+            'dui' => ['nullable', 'string', 'max:10', Rule::unique('users', 'dui')->ignore($user->id)],
             'theme_preference' => ['nullable', 'in:light,dark,auto'],
         ]);
 
+        $validated['dui'] = ! empty($validated['dui']) ? $validated['dui'] : null;
         $user->update($validated);
 
         return response()->json([

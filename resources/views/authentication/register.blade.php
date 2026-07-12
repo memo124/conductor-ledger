@@ -21,7 +21,7 @@
         </div>
         <div class="mb-3">
             <label class="form-label">DUI</label>
-            <input type="text" name="dui" class="form-control" required maxlength="10">
+            <input type="text" name="dui" class="form-control" maxlength="10" placeholder="Opcional">
         </div>
         <div class="mb-3">
             <label class="form-label">Contraseña</label>
