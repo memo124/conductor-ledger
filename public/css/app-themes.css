@@ -117,10 +117,6 @@ body.cl-body {
     flex-shrink: 0;
 }
 
-.cl-mobile-logout {
-    margin-left: auto;
-}
-
 .cl-user-name {
     font-size: 0.85rem;
     color: var(--cl-text-muted);
@@ -496,12 +492,17 @@ table.dataTable tbody tr:hover > * {
     }
 
     .cl-mobile-brand {
+        flex: 1;
         font-weight: 700;
         font-size: 1rem;
         color: var(--cl-accent);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+
+    .cl-sidebar-footer {
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
     }
 
     .cl-sidebar-overlay {
@@ -521,6 +522,8 @@ table.dataTable tbody tr:hover > * {
     }
 
     .cl-sidebar {
+        height: 100dvh;
+        max-height: 100dvh;
         transform: translateX(-100%);
         transition: transform 0.25s ease;
         z-index: 1050;

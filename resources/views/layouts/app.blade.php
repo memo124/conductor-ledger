@@ -39,9 +39,6 @@
         <span class="cl-mobile-brand">
             <i class="fa-solid fa-chart-line"></i> ConductorLedger
         </span>
-        <button type="button" id="btnLogoutMobile" class="btn btn-sm btn-outline-danger cl-mobile-logout">
-            <i class="fa-solid fa-right-from-bracket"></i> Salir
-        </button>
     </header>
 
     <nav class="cl-sidebar" id="clSidebar" aria-hidden="true">
