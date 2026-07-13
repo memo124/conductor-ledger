@@ -11,6 +11,30 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y el p
 
 ---
 
+## [1.3.0] - 2026-07-12
+
+Internacionalización completa (ES/EN), monedas fiat y cripto con tipos de cambio en caché, conversor de monedas y assets frontend locales.
+
+### Added
+- **i18n JSON** (`resources/lang/ui/es.json`, `en.json`) con `UiTranslator`, helper `ui()` y `ui_menu()`.
+- **Preferencias de usuario:** idioma en sidebar; moneda de visualización en perfil (fiat + cripto).
+- **Tipos de cambio:** tablas `currencies`, `exchange_rates`, `exchange_rate_syncs`; sync diario vía CurrencyFreaks (`exchange-rates:sync`).
+- **Pantalla Conversor de monedas:** calculadora y matriz fiat↔fiat, cripto↔cripto y fiat↔cripto.
+- **Assets vendor locales** en `public/vendor/` (Bootstrap, jQuery, DataTables, Select2, Font Awesome).
+- **JS:** `ConductorLedger.I18n`, `ConductorLedger.Money` y formateo de montos en DataTables según moneda del usuario.
+- Migraciones de monedas, locale/currency en usuarios, menú `conversor` y permisos RBAC.
+
+### Changed
+- Todas las pantallas principales traducidas vía Blade (`ui()`): viajes, gastos, vehículos, gráficos, usuarios, permisos, backups, descifrado, maestros y login.
+- DataTables usa idioma del usuario (ES/EN) desde JSON embebido.
+- Montos en API en USD base; conversión y formato en frontend según preferencia.
+
+### Fixed
+- Modal de viajes con scroll en móvil (botón Guardar visible).
+- Logout duplicado en header móvil y recorte del selector de tema en sidebar.
+
+---
+
 ## [1.2.1] - 2026-07-12
 
 Corrección de respaldos manuales y programados: formato ZIP con SQL restaurable, compatibilidad Windows/Linux/Docker y rutas normalizadas.

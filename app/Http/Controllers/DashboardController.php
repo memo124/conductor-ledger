@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\FormatsMoney;
 use App\Services\EncryptionService;
 use App\Services\FinancialRecordService;
 use Illuminate\Http\JsonResponse;
@@ -10,6 +11,7 @@ use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    use FormatsMoney;
     public function __construct(private readonly FinancialRecordService $financialRecords) {}
 
     public function index(): View
@@ -34,11 +36,11 @@ class DashboardController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'ingresos' => number_format($ingresos, 2),
-                'comision' => number_format($comision, 2),
-                'alquiler' => number_format($alquiler, 2),
-                'gastos' => number_format($gastos, 2),
-                'neto' => number_format($neto, 2),
+                'ingresos' => $this->moneyUsd($ingresos),
+                'comision' => $this->moneyUsd($comision),
+                'alquiler' => $this->moneyUsd($alquiler),
+                'gastos' => $this->moneyUsd($gastos),
+                'neto' => $this->moneyUsd($neto),
                 'anio' => $anio,
                 'mes' => $mes,
             ],

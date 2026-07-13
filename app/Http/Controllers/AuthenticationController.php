@@ -75,6 +75,8 @@ class AuthenticationController extends Controller
                 'message' => 'Sesión iniciada correctamente.',
                 'redirect' => route('dashboard'),
                 'theme_preference' => $user->theme_preference ?? 'auto',
+                'locale_preference' => $user->locale_preference ?? 'es',
+                'currency_preference' => $user->currency_preference ?? 'USD',
             ]);
         }
 
@@ -133,7 +135,30 @@ class AuthenticationController extends Controller
                 'email' => $user->email,
                 'dui' => $user->dui,
                 'theme_preference' => $user->theme_preference ?? 'auto',
+                'locale_preference' => $user->locale_preference ?? 'es',
+                'currency_preference' => $user->currency_preference ?? 'USD',
             ],
+        ]);
+    }
+
+    public function updateLocalePreference(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'locale_preference' => ['required', 'in:es,en'],
+        ]);
+
+        $user = Auth::user();
+
+        if (! $user) {
+            return response()->json(['success' => false, 'message' => 'No autenticado.'], 401);
+        }
+
+        $user->update(['locale_preference' => $validated['locale_preference']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => ui('profile.save'),
+            'locale_preference' => $user->locale_preference,
         ]);
     }
 

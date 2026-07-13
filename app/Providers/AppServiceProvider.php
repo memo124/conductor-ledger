@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use App\Services\ExchangeRateService;
 use App\Services\MenuService;
+use App\Support\UiTranslator;
+use App\Services\MoneyFormatter;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
@@ -19,8 +22,26 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         View::composer('layouts.app', function ($view) {
+            $locale = Auth::check()
+                ? (Auth::user()->locale_preference ?? 'es')
+                : config('app.locale', 'es');
+
+            $view->with('clUiTranslations', UiTranslator::all($locale));
+            $view->with('clLocales', config('conductor-ledger.locales', []));
+
             if (Auth::check()) {
-                $view->with('clMenu', app(MenuService::class)->menuForUser(Auth::user()));
+                $user = Auth::user();
+                $exchangeRates = app(ExchangeRateService::class);
+                $money = app(MoneyFormatter::class);
+
+                $view->with('clMenu', app(MenuService::class)->menuForUser($user));
+                $view->with('clMoneyConfig', [
+                    'baseCurrency' => $exchangeRates->baseCurrency(),
+                    'currency' => $money->userCurrency($user),
+                    'locale' => $money->userLocale($user),
+                    'rates' => $exchangeRates->ratesMap(),
+                    'decimalPlacesMap' => $exchangeRates->decimalPlacesMap(),
+                ]);
             }
         });
 

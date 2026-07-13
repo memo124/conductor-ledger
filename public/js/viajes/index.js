@@ -220,8 +220,8 @@ $(function () {
             if (data.alquiler_editable) {
                 $alquiler.prop('readonly', false).val(data.suggested_alquiler.toFixed(2));
                 $suggestion.text(
-                    'Sugerido: $' + data.suggested_alquiler.toFixed(2) +
-                    ' (cuota ' + data.rental_period_label + ' $' + data.rental_fee.toFixed(2) + ')'
+                    'Sugerido: ' + ConductorLedger.Money.formatFromBase(data.suggested_alquiler) +
+                    ' (cuota ' + data.rental_period_label + ' ' + ConductorLedger.Money.formatFromBase(data.rental_fee) + ')'
                 );
             } else {
                 $alquiler.val(0).prop('readonly', true);
@@ -236,10 +236,10 @@ $(function () {
             return;
         }
         $('#viajesTotals').show();
-        $('#totalIngresos').text('$' + totals.ingresos);
-        $('#totalComision').text('$' + totals.comision_app);
-        $('#totalAlquiler').text('$' + totals.alquiler);
-        $('#totalNeto').text('$' + totals.neto);
+        $('#totalIngresos').text(ConductorLedger.Money.formatFromBase(totals.ingresos));
+        $('#totalComision').text(ConductorLedger.Money.formatFromBase(totals.comision_app));
+        $('#totalAlquiler').text(ConductorLedger.Money.formatFromBase(totals.alquiler));
+        $('#totalNeto').text(ConductorLedger.Money.formatFromBase(totals.neto));
     }
 
     function filterParams() {
@@ -320,7 +320,7 @@ $(function () {
             });
     }
 
-    var table = $('#tblViajes').DataTable($.extend(true, {}, ConductorLedger.defaultDataTableOptions, {
+    var table = $('#tblViajes').DataTable($.extend(true, {}, ConductorLedger.buildDefaultDataTableOptions(), {
         ajax: {
             url: APLICATIVO_API.VIAJES.GET.DATATABLE,
             type: 'GET',
@@ -341,13 +341,13 @@ $(function () {
             { data: 'trip_type' },
             { data: 'platform' },
             { data: 'registration_mode' },
-            { data: 'monto_bruto', className: 'text-income' },
-            { data: 'comision_app', className: 'text-expense' },
-            { data: 'monto_cobrado', className: 'text-income' },
-            { data: 'propina', className: 'text-income' },
-            { data: 'alquiler', className: 'text-expense' },
-            { data: 'ingresos', className: 'text-income' },
-            { data: 'neto', className: 'text-primary' },
+            $.extend({ data: 'monto_bruto', className: 'text-income' }, ConductorLedger.moneyColumn()),
+            $.extend({ data: 'comision_app', className: 'text-expense' }, ConductorLedger.moneyColumn()),
+            $.extend({ data: 'monto_cobrado', className: 'text-income' }, ConductorLedger.moneyColumn()),
+            $.extend({ data: 'propina', className: 'text-income' }, ConductorLedger.moneyColumn()),
+            $.extend({ data: 'alquiler', className: 'text-expense' }, ConductorLedger.moneyColumn()),
+            $.extend({ data: 'ingresos', className: 'text-income' }, ConductorLedger.moneyColumn()),
+            $.extend({ data: 'neto', className: 'text-primary' }, ConductorLedger.moneyColumn()),
             {
                 data: 'uuid',
                 orderable: false,

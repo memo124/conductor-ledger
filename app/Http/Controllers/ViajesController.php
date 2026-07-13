@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\FormatsMoney;
 use App\Models\Platform;
 use App\Models\Trip;
 use App\Models\TripType;
@@ -24,6 +25,8 @@ use Illuminate\View\View;
 
 class ViajesController extends Controller
 {
+    use FormatsMoney;
+
     public function __construct(
         private readonly YearlyCounterService $counterService,
         private readonly VehicleRentalService $rentalService,
@@ -194,10 +197,10 @@ class ViajesController extends Controller
             'success' => true,
             'message' => sprintf(
                 'Registrado: ganaste $%s | Comisión: $%s | Cuota vehículo: $%s | Neto: $%s',
-                number_format($ingresos, 2),
-                number_format($comisionApp, 2),
-                number_format($alquiler, 2),
-                number_format($neto, 2),
+                $this->money($ingresos),
+                $this->money($comisionApp),
+                $this->money($alquiler),
+                $this->money($neto),
             ),
             'data' => $trip,
             'summary' => [
@@ -360,13 +363,13 @@ class ViajesController extends Controller
                 'trip_type' => $row->trip_type_name ?? '—',
                 'platform' => $row->platform_name ?? '—',
                 'registration_mode' => $this->tripRegistration->registrationModeLabel($row->registration_mode),
-                'monto_bruto' => number_format($amounts['monto_bruto'], 2),
-                'comision_app' => number_format($amounts['comision_app'], 2),
-                'monto_cobrado' => number_format($amounts['monto_cobrado'], 2),
-                'propina' => number_format($amounts['propina'], 2),
-                'alquiler' => number_format($amounts['alquiler'], 2),
-                'ingresos' => number_format($ingresos, 2),
-                'neto' => number_format($neto, 2),
+                'monto_bruto' => $this->moneyUsd($amounts['monto_bruto']),
+                'comision_app' => $this->moneyUsd($amounts['comision_app']),
+                'monto_cobrado' => $this->moneyUsd($amounts['monto_cobrado']),
+                'propina' => $this->moneyUsd($amounts['propina']),
+                'alquiler' => $this->moneyUsd($amounts['alquiler']),
+                'ingresos' => $this->moneyUsd($ingresos),
+                'neto' => $this->moneyUsd($neto),
             ];
         });
 
@@ -376,10 +379,10 @@ class ViajesController extends Controller
             'recordsFiltered' => $recordsFiltered,
             'data' => $data,
             'totals' => [
-                'ingresos' => number_format($totals['ingresos'], 2),
-                'comision_app' => number_format($totals['comision_app'], 2),
-                'alquiler' => number_format($totals['alquiler'], 2),
-                'neto' => number_format($totals['neto'], 2),
+                'ingresos' => $this->moneyUsd($totals['ingresos']),
+                'comision_app' => $this->moneyUsd($totals['comision_app']),
+                'alquiler' => $this->moneyUsd($totals['alquiler']),
+                'neto' => $this->moneyUsd($totals['neto']),
             ],
         ]);
     }
@@ -521,7 +524,7 @@ class ViajesController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Viaje actualizado correctamente. Nuevo ingreso: $'.number_format($ingresos, 2),
+            'message' => 'Viaje actualizado correctamente. Nuevo ingreso: '.$this->money($ingresos),
         ]);
     }
 

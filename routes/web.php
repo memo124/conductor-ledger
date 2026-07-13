@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\BackupsController;
+use App\Http\Controllers\CurrencyConverterController;
 use App\Http\Controllers\CategoriasGastoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmergencyDecryptController;
@@ -31,6 +32,7 @@ Route::post('/Authentication/Logout', [AuthenticationController::class, 'logout'
 Route::middleware('auth')->group(function () {
     Route::get('/Authentication/GetUserById', [AuthenticationController::class, 'getUserById']);
     Route::post('/Authentication/UpdateThemePreference', [AuthenticationController::class, 'updateThemePreference']);
+    Route::post('/Authentication/UpdateLocalePreference', [AuthenticationController::class, 'updateLocalePreference']);
     Route::get('/Authentication/ActualizarSesion', [AuthenticationController::class, 'actualizarSesion']);
 
     Route::middleware('permission:perfil')->group(function () {
@@ -47,6 +49,12 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:graficos')->group(function () {
         Route::get('/Graficos', [GraficosController::class, 'index'])->name('graficos.index');
         Route::get('/Graficos/GetMetrics', [GraficosController::class, 'getMetrics']);
+    });
+
+    Route::middleware('permission:conversor')->group(function () {
+        Route::get('/Conversor', [CurrencyConverterController::class, 'index'])->name('conversor.index');
+        Route::get('/Conversor/Convert', [CurrencyConverterController::class, 'convert']);
+        Route::get('/Conversor/Rates', [CurrencyConverterController::class, 'rates']);
     });
 
     Route::middleware('permission:dashboard')->group(function () {

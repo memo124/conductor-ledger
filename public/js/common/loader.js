@@ -10,6 +10,7 @@ ConductorLedger.silentAjaxPatterns = [
     'GetDatatableServerSide',
     'ActualizarSesion',
     'UpdateThemePreference',
+    'UpdateLocalePreference',
     'GetRentalSuggestion'
 ];
 

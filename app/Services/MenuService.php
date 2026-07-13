@@ -41,7 +41,7 @@ class MenuService
 
                 return (object) [
                     'slug' => $option->slug,
-                    'label' => $option->label,
+                    'label' => ui_menu($option->slug, $option->label),
                     'route_name' => $option->route_name,
                     'icon' => $option->icon,
                     'is_divider' => ! $option->route_name && $children->isNotEmpty(),

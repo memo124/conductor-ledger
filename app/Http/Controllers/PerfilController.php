@@ -17,7 +17,14 @@ class PerfilController extends Controller
 
     public function index(): View
     {
-        return view('perfil.index', ['user' => Auth::user()]);
+        $exchangeRates = app(\App\Services\ExchangeRateService::class);
+
+        return view('perfil.index', [
+            'user' => Auth::user(),
+            'fiatCurrencies' => $exchangeRates->activeCurrencies('fiat'),
+            'cryptoCurrencies' => $exchangeRates->activeCurrencies('crypto'),
+            'locales' => config('conductor-ledger.locales', []),
+        ]);
     }
 
     public function update(Request $request): JsonResponse
@@ -29,6 +36,8 @@ class PerfilController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'dui' => ['nullable', 'string', 'max:10', Rule::unique('users', 'dui')->ignore($user->id)],
             'theme_preference' => ['nullable', 'in:light,dark,auto'],
+            'locale_preference' => ['nullable', 'in:es,en'],
+            'currency_preference' => ['nullable', 'string', 'max:10', Rule::exists('currencies', 'code')],
         ]);
 
         $validated['dui'] = ! empty($validated['dui']) ? $validated['dui'] : null;

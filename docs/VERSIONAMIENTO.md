@@ -44,6 +44,7 @@ cat VERSION
 
 | Versión | Fecha | Resumen |
 |---------|-------|---------|
+| **1.3.0** | 2026-07-12 | i18n ES/EN, monedas fiat/cripto, conversor, assets vendor locales |
 | **1.2.1** | 2026-07-12 | Fix respaldos ZIP/SQL, rutas Windows, pg_dump multiplataforma |
 | **1.2.0** | 2026-07-12 | Registro híbrido de viajes, plataformas, tipos de viaje, permisos admin |
 | **1.1.3** | 2026-07-08 | Fix validación cuota vehículos PROPIO/OTRO |

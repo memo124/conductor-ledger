@@ -29,6 +29,7 @@ class AppOptionSeeder extends Seeder
                     ['slug' => 'gastos', 'label' => 'Gastos', 'route_name' => 'gastos.index', 'icon' => 'fa-solid fa-wallet', 'sort_order' => 3],
                     ['slug' => 'vehiculos', 'label' => 'Vehículos', 'route_name' => 'vehiculos.index', 'icon' => 'fa-solid fa-car', 'sort_order' => 4],
                     ['slug' => 'graficos', 'label' => 'Gráficos', 'route_name' => 'graficos.index', 'icon' => 'fa-solid fa-chart-pie', 'sort_order' => 5],
+                    ['slug' => 'conversor', 'label' => 'Conversor de monedas', 'route_name' => 'conversor.index', 'icon' => 'fa-solid fa-right-left', 'sort_order' => 6],
                 ],
             ],
             [

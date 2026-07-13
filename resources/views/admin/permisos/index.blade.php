@@ -1,17 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Permisos')
+@section('title', ui('pages.permisos.title'))
 
 @section('content')
 <div class="cl-page-header">
-    <h1><i class="fa-solid fa-shield-halved text-primary"></i> Permisos por Rol</h1>
-    <p>Matriz de permisos view / create / update / delete por opción del menú</p>
+    <h1><i class="fa-solid fa-shield-halved text-primary"></i> {{ ui('pages.permisos.heading') }}</h1>
+    <p>{{ ui('pages.permisos.subtitle') }}</p>
 </div>
 
 <div class="cl-card mb-3">
     <div class="row g-2 align-items-end">
         <div class="col-12 col-md-6 col-lg-4">
-            <label class="form-label" for="selectRole">Rol</label>
+            <label class="form-label" for="selectRole">{{ ui('pages.permisos.field_role') }}</label>
             <select id="selectRole" class="form-select">
                 @foreach($roles as $role)
                     <option value="{{ $role->id }}">{{ $role->name }}</option>
@@ -20,7 +20,7 @@
         </div>
         <div class="col-12 col-md-auto">
             <button type="button" id="btnSavePermisos" class="btn btn-primary">
-                <i class="fa-solid fa-floppy-disk"></i> Guardar permisos
+                <i class="fa-solid fa-floppy-disk"></i> {{ ui('pages.permisos.save_permissions') }}
             </button>
         </div>
     </div>
@@ -31,16 +31,16 @@
         <table id="tblPermisos" class="table table-striped w-100">
             <thead>
                 <tr>
-                    <th>Opción</th>
-                    <th class="text-center">Ver</th>
-                    <th class="text-center">Crear</th>
-                    <th class="text-center">Editar</th>
-                    <th class="text-center">Eliminar</th>
+                    <th>{{ ui('pages.permisos.col_option') }}</th>
+                    <th class="text-center">{{ ui('pages.permisos.col_view') }}</th>
+                    <th class="text-center">{{ ui('pages.permisos.col_create') }}</th>
+                    <th class="text-center">{{ ui('pages.permisos.col_edit') }}</th>
+                    <th class="text-center">{{ ui('pages.permisos.col_delete') }}</th>
                 </tr>
             </thead>
             <tbody id="permisosBody">
                 <tr>
-                    <td colspan="5" class="text-center text-muted">Seleccione un rol para cargar permisos</td>
+                    <td colspan="5" class="text-center text-muted">{{ ui('pages.permisos.empty_select_role') }}</td>
                 </tr>
             </tbody>
         </table>

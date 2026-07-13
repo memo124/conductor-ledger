@@ -19,6 +19,8 @@ class User extends Authenticatable
         'dui',
         'is_active',
         'theme_preference',
+        'locale_preference',
+        'currency_preference',
         'role',
         'email_verified_at',
         'encrypted_dek',

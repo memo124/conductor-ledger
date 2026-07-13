@@ -1,9 +1,6 @@
 $(function () {
     ConductorLedger.setupAjaxCsrf();
 
-    var meses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-
     var comparativaTable = null;
 
     function cargarResumen() {
@@ -11,10 +8,10 @@ $(function () {
             .done(function (res) {
                 if (!res.success) return;
                 var d = res.data;
-                $('#statIngresos').text('$' + d.ingresos);
-                $('#statAlquiler').text('$' + d.alquiler);
-                $('#statGastos').text('$' + d.gastos);
-                $('#statNeto').text('$' + d.neto);
+                $('#statIngresos').text(ConductorLedger.Money.formatFromBase(d.ingresos));
+                $('#statAlquiler').text(ConductorLedger.Money.formatFromBase(d.alquiler));
+                $('#statGastos').text(ConductorLedger.Money.formatFromBase(d.gastos));
+                $('#statNeto').text(ConductorLedger.Money.formatFromBase(d.neto));
             });
     }
 
@@ -24,12 +21,12 @@ $(function () {
                 var data = (res.data || []).map(function (row) {
                     var ingresos = parseFloat(row.total_ingresos || 0);
                     return {
-                        mes: meses[row.mes],
-                        ingresos: ingresos.toFixed(2),
-                        comision: parseFloat(row.total_comision || 0).toFixed(2),
-                        propinas: parseFloat(row.total_propinas || 0).toFixed(2),
-                        alquiler: parseFloat(row.total_alquiler || 0).toFixed(2),
-                        total: ingresos.toFixed(2)
+                        mes: ConductorLedger.I18n.monthName(row.mes),
+                        ingresos: ingresos,
+                        comision: parseFloat(row.total_comision || 0),
+                        propinas: parseFloat(row.total_propinas || 0),
+                        alquiler: parseFloat(row.total_alquiler || 0),
+                        total: ingresos
                     };
                 });
 
@@ -38,35 +35,15 @@ $(function () {
                     return;
                 }
 
-                comparativaTable = $('#tblComparativa').DataTable($.extend(true, {}, ConductorLedger.simpleDataTableOptions, {
+                comparativaTable = $('#tblComparativa').DataTable($.extend(true, {}, ConductorLedger.buildSimpleDataTableOptions(), {
                     data: data,
                     columns: [
                         { data: 'mes' },
-                        {
-                            data: 'ingresos',
-                            className: 'text-income',
-                            render: function (d) { return '$' + d; }
-                        },
-                        {
-                            data: 'comision',
-                            className: 'text-expense',
-                            render: function (d) { return '$' + d; }
-                        },
-                        {
-                            data: 'propinas',
-                            className: 'text-income',
-                            render: function (d) { return '$' + d; }
-                        },
-                        {
-                            data: 'alquiler',
-                            className: 'text-expense',
-                            render: function (d) { return '$' + d; }
-                        },
-                        {
-                            data: 'total',
-                            className: 'text-income',
-                            render: function (d) { return '<strong>$' + d + '</strong>'; }
-                        }
+                        $.extend({ data: 'ingresos', className: 'text-income' }, ConductorLedger.moneyColumn()),
+                        $.extend({ data: 'comision', className: 'text-expense' }, ConductorLedger.moneyColumn()),
+                        $.extend({ data: 'propinas', className: 'text-income' }, ConductorLedger.moneyColumn()),
+                        $.extend({ data: 'alquiler', className: 'text-expense' }, ConductorLedger.moneyColumn()),
+                        $.extend({ data: 'total', className: 'text-income' }, ConductorLedger.moneyColumn())
                     ]
                 }));
             });

@@ -14,6 +14,10 @@ class DatabaseSeeder extends Seeder
             ExpenseCategorySeeder::class,
         ];
 
+        if (Schema::hasTable('currencies')) {
+            array_unshift($seeders, CurrencySeeder::class);
+        }
+
         if (Schema::hasTable('roles')) {
             array_unshift($seeders,
                 RoleSeeder::class,

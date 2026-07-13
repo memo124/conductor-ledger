@@ -34,10 +34,10 @@ $(function () {
             return;
         }
         $('#gastosTotals').show();
-        $('#totalMonto').text('$' + totals.monto);
+        $('#totalMonto').text(ConductorLedger.Money.formatFromBase(totals.monto));
     }
 
-    var table = $('#tblGastos').DataTable($.extend(true, {}, ConductorLedger.defaultDataTableOptions, {
+    var table = $('#tblGastos').DataTable($.extend(true, {}, ConductorLedger.buildDefaultDataTableOptions(), {
         ajax: {
             url: APLICATIVO_API.GASTOS.GET.DATATABLE,
             type: 'GET',
@@ -55,7 +55,7 @@ $(function () {
             { data: 'fecha' },
             { data: 'categoria' },
             { data: 'vehicle' },
-            { data: 'monto', className: 'text-expense' },
+            $.extend({ data: 'monto', className: 'text-expense' }, ConductorLedger.moneyColumn()),
             { data: 'descripcion' }
         ]
     }));

@@ -43,7 +43,7 @@ class PermisosController extends Controller
             return [
                 'app_option_id' => $option->id,
                 'slug' => $option->slug,
-                'label' => $option->label,
+                'label' => ui_menu($option->slug, $option->label),
                 'can_view' => (bool) ($perm->can_view ?? false),
                 'can_create' => (bool) ($perm->can_create ?? false),
                 'can_update' => (bool) ($perm->can_update ?? false),

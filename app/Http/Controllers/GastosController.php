@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\FormatsMoney;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Vehicle;
@@ -18,6 +19,8 @@ use Illuminate\View\View;
 
 class GastosController extends Controller
 {
+    use FormatsMoney;
+
     public function __construct(
         private readonly YearlyCounterService $counterService,
         private readonly FinancialRecordService $financialRecords,
@@ -189,7 +192,7 @@ class GastosController extends Controller
                 'fecha' => $row->fecha,
                 'categoria' => $row->categoria,
                 'vehicle' => $row->plate_number ?? '—',
-                'monto' => number_format($amounts['monto'], 2),
+                'monto' => $this->moneyUsd($amounts['monto']),
                 'descripcion' => $amounts['descripcion'] ?? '—',
             ];
         });
@@ -200,7 +203,7 @@ class GastosController extends Controller
             'recordsFiltered' => $recordsFiltered,
             'data' => $data,
             'totals' => [
-                'monto' => number_format($totalMonto, 2),
+                'monto' => $this->moneyUsd($totalMonto),
             ],
         ]);
     }

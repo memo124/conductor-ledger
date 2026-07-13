@@ -1,22 +1,22 @@
 @extends('layouts.app')
 
-@section('title', 'Categorías de Gasto')
+@section('title', ui('pages.maestros.categorias_gasto.title'))
 
 @section('content')
 <div class="cl-page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
     <div>
-        <h1><i class="fa-solid fa-tags text-primary"></i> Categorías de Gasto</h1>
-        <p>Tabla maestra — GASOLINA, ALQUILER, COMIDA, MANTENIMIENTO, OTROS</p>
+        <h1><i class="fa-solid fa-tags text-primary"></i> {{ ui('pages.maestros.categorias_gasto.heading') }}</h1>
+        <p>{{ ui('pages.maestros.categorias_gasto.subtitle') }}</p>
     </div>
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevo">
-        <i class="fa-solid fa-plus"></i> Nueva Categoría
+        <i class="fa-solid fa-plus"></i> {{ ui('pages.maestros.categorias_gasto.new') }}
     </button>
 </div>
 
 <div class="cl-card">
     <div class="table-responsive">
         <table id="tblMaestro" class="table table-striped w-100">
-            <thead><tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>{{ ui('common.id') }}</th><th>{{ ui('common.name') }}</th><th>{{ ui('common.actions') }}</th></tr></thead>
         </table>
     </div>
 </div>
@@ -25,17 +25,17 @@
     <div class="modal-dialog modal-sm">
         <div class="modal-content cl-modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">Nueva Categoría</h5>
+                <h5 class="modal-title" id="modalTitle">{{ ui('pages.maestros.categorias_gasto.modal_title_create') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="formMaestro">
                 <input type="hidden" name="id" id="recordId">
                 <div class="modal-body">
-                    <label class="form-label">Nombre</label>
+                    <label class="form-label">{{ ui('common.name') }}</label>
                     <input type="text" name="name" id="inputName" class="form-control" maxlength="50" required>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="submit" class="btn btn-primary">{{ ui('actions.save') }}</button>
                 </div>
             </form>
         </div>

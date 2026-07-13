@@ -25,6 +25,20 @@ $(function () {
                         // ignore storage errors
                     }
                 }
+                if (res.locale_preference) {
+                    try {
+                        localStorage.setItem('cl_locale_preference', res.locale_preference);
+                    } catch (e) {
+                        // ignore storage errors
+                    }
+                }
+                if (res.currency_preference) {
+                    try {
+                        localStorage.setItem('cl_currency_preference', res.currency_preference);
+                    } catch (e) {
+                        // ignore storage errors
+                    }
+                }
                 ConductorLedger.showAlert(res.message, 'success');
                 window.location.href = res.redirect;
             })

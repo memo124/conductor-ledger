@@ -17,3 +17,8 @@ Schedule::job(new \App\Jobs\DatabaseBackupJob)
     ->monthlyOn(1, '03:00')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/backups.log'));
+
+Schedule::command('exchange-rates:sync')
+    ->dailyAt('01:05')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/exchange-rates.log'));

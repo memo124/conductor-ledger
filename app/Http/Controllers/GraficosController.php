@@ -44,9 +44,6 @@ class GraficosController extends Controller
 
     private function monthLabel(int $month): string
     {
-        return [
-            1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr', 5 => 'May', 6 => 'Jun',
-            7 => 'Jul', 8 => 'Ago', 9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dic',
-        ][$month] ?? (string) $month;
+        return ui('months_short.'.$month);
     }
 }

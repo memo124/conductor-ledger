@@ -11,6 +11,7 @@ const APLICATIVO_API = {
             LOGIN: '/Authentication/Login',
             LOGOUT: '/Authentication/Logout',
             UPDATE_THEME: '/Authentication/UpdateThemePreference',
+            UPDATE_LOCALE: '/Authentication/UpdateLocalePreference',
             FORGOT_PASSWORD: '/Authentication/ForgotPassword',
             RESET_PASSWORD: '/Authentication/ResetPassword',
             REGISTER: '/Registro/Store'
@@ -46,6 +47,12 @@ const APLICATIVO_API = {
     GRAFICOS: {
         GET: {
             METRICS: '/Graficos/GetMetrics'
+        }
+    },
+    CONVERSOR: {
+        GET: {
+            CONVERT: '/Conversor/Convert',
+            RATES: '/Conversor/Rates'
         }
     },
     EXPORT: {

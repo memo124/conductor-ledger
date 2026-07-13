@@ -36,43 +36,35 @@ ConductorLedger.chainInitComplete = function (options) {
     return options;
 };
 
-ConductorLedger.defaultDataTableOptions = ConductorLedger.chainInitComplete({
-    processing: true,
-    serverSide: true,
-    autoWidth: false,
-    pageLength: 10,
-    lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-    language: {
-        processing: '<div class="cl-dt-processing"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...</div>',
-        emptyTable: 'No hay datos disponibles en la tabla',
-        info: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
-        infoEmpty: 'Mostrando 0 a 0 de 0 registros',
-        infoFiltered: '(filtrado de _MAX_ registros totales)',
-        lengthMenu: 'Mostrar _MENU_ registros',
-        loadingRecords: 'Cargando...',
-        search: 'Buscar:',
-        zeroRecords: 'No se encontraron registros coincidentes',
-        paginate: {
-            first: 'Primero',
-            last: 'Último',
-            next: 'Siguiente',
-            previous: 'Anterior'
-        },
-        aria: {
-            sortAscending: ': activar para ordenar la columna ascendente',
-            sortDescending: ': activar para ordenar la columna descendente'
-        }
-    }
-});
+ConductorLedger.buildDefaultDataTableOptions = function () {
+    var language = typeof ConductorLedger.I18n !== 'undefined'
+        ? ConductorLedger.I18n.datatablesLanguage()
+        : {};
 
-ConductorLedger.simpleDataTableOptions = ConductorLedger.chainInitComplete({
-    paging: false,
-    searching: false,
-    info: false,
-    ordering: false,
-    autoWidth: false,
-    language: {
-        emptyTable: 'Sin datos',
-        zeroRecords: 'Sin datos'
-    }
-});
+    return ConductorLedger.chainInitComplete({
+        processing: true,
+        serverSide: true,
+        autoWidth: false,
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+        language: language
+    });
+};
+
+ConductorLedger.buildSimpleDataTableOptions = function () {
+    var language = typeof ConductorLedger.I18n !== 'undefined'
+        ? ConductorLedger.I18n.simpleDatatablesLanguage()
+        : {};
+
+    return ConductorLedger.chainInitComplete({
+        paging: false,
+        searching: false,
+        info: false,
+        ordering: false,
+        autoWidth: false,
+        language: language
+    });
+};
+
+ConductorLedger.defaultDataTableOptions = ConductorLedger.buildDefaultDataTableOptions();
+ConductorLedger.simpleDataTableOptions = ConductorLedger.buildSimpleDataTableOptions();

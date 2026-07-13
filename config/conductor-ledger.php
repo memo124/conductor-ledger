@@ -33,4 +33,23 @@ return [
         'emergency_decrypt_rate_limit' => (int) env('EMERGENCY_DECRYPT_RATE_LIMIT', 5),
     ],
 
+    'currency' => [
+        'base' => env('APP_BASE_CURRENCY', 'USD'),
+        'default' => env('APP_DEFAULT_CURRENCY', 'USD'),
+        'api_key' => env('CURRENCYFREAKS_API_KEY'),
+        'api_url' => env('CURRENCYFREAKS_API_URL', 'https://api.currencyfreaks.com/v2.0/rates/latest'),
+        'sync_min_hours' => (int) env('EXCHANGE_RATE_SYNC_MIN_HOURS', 20),
+    ],
+
+    'locales' => [
+        'es' => [
+            'label' => 'Español',
+            'intl' => 'es_SV',
+        ],
+        'en' => [
+            'label' => 'English',
+            'intl' => 'en_US',
+        ],
+    ],
+
 ];

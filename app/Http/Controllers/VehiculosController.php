@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\FormatsMoney;
 use App\Models\Vehicle;
 use App\Models\VehicleOwnershipType;
 use App\Services\VehicleRentalService;
@@ -13,6 +14,8 @@ use Illuminate\View\View;
 
 class VehiculosController extends Controller
 {
+    use FormatsMoney;
+
     public function __construct(private readonly VehicleRentalService $rentalService) {}
 
     public function index(): View
@@ -47,13 +50,13 @@ class VehiculosController extends Controller
             'ownership_type_id' => $v->ownership_type_id,
             'ownership_requires_fee' => $this->rentalService->ownershipRequiresFee($v->ownershipType?->name),
             'ownership_is_rented' => $this->rentalService->ownershipRequiresFee($v->ownershipType?->name),
-            'rental_fee_daily' => number_format((float) $v->rental_fee_daily, 2),
+            'rental_fee_daily' => $this->money((float) $v->rental_fee_daily),
             'rental_fee_raw' => (float) $v->rental_fee_daily,
             'rental_period' => $periodLabels[$v->rental_period ?? 'daily'] ?? 'Diario',
             'rental_period_code' => $v->rental_period ?? 'daily',
             'quota_percentage' => number_format((float) $v->quota_percentage, 2),
             'quota_percentage_raw' => (float) $v->quota_percentage,
-            'quota_reserve_amount' => number_format((float) $v->quota_reserve_amount, 2),
+            'quota_reserve_amount' => $this->money((float) $v->quota_reserve_amount),
             'quota_reserve_raw' => (float) $v->quota_reserve_amount,
             'is_active' => $v->is_active ? 'Activo' : 'Inactivo',
             'is_active_bool' => $v->is_active,

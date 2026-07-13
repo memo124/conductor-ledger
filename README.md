@@ -1,6 +1,6 @@
 # ConductorLedger
 
-![Versión](https://img.shields.io/badge/versión-1.2.1-blue)
+![Versión](https://img.shields.io/badge/versión-1.3.0-blue)
 ![Laravel](https://img.shields.io/badge/Laravel-12-red)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-777)
 
@@ -19,13 +19,16 @@ Sistema web para que conductores de plataformas (InDrive, etc.) lleven el contro
 - **Cifrado** de datos financieros sensibles por usuario.
 - **Respaldos** de base de datos en ZIP con SQL restaurable (`psql`), manuales y programados.
 - **Loaders visuales** en acciones AJAX (overlay + spinner en botones).
-
+- **Internacionalización** ES/EN con JSON (`ui()`) en todas las pantallas y DataTables.
+- **Monedas fiat y cripto** con tipos de cambio en caché (CurrencyFreaks) y preferencia por usuario.
+- **Conversor de monedas** (fiat↔fiat, cripto↔cripto, fiat↔cripto) con calculadora y matriz de tipos.
 - Gestión de **usuarios** (administradores) con activación, roles y auditoría.
 
 ## Versión actual
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.3.0** | 2026-07-12 | i18n ES/EN, monedas fiat/cripto, conversor, assets vendor locales |
 | **1.2.1** | 2026-07-12 | Fix respaldos ZIP/SQL, rutas Windows, pg_dump multiplataforma |
 | **1.2.0** | 2026-07-12 | Registro híbrido de viajes, plataformas, tipos de viaje, permisos admin |
 | **1.1.3** | 2026-07-08 | Fix validación cuota en vehículos PROPIO/OTRO |
@@ -116,6 +119,7 @@ Accede a `http://127.0.0.1:8000` (ajusta `APP_URL` en `.env`).
 | `php artisan encryption:migrate-legacy` | Migrar registros antiguos al esquema cifrado |
 | `php artisan test` | Ejecutar pruebas |
 | `php artisan config:clear` | Limpiar caché tras cambiar `.env` |
+| `php artisan exchange-rates:sync` | Sincronizar tipos de cambio (CurrencyFreaks) |
 
 ## Estructura del proyecto
 
@@ -188,7 +192,11 @@ Detalle: [docs/SEGURIDAD.md](docs/SEGURIDAD.md)
 | `SECURITY_ADMIN_EMAIL` | Notificaciones admin |
 | `PG_DUMP_BINARY` | Ruta a `pg_dump` (Windows/Docker si no está en PATH) |
 | `BACKUP_RETENTION_MONTHS` | Meses de retención de respaldos |
-| `APP_LOCALE` | `es` (mensajes en español) |
+| `APP_LOCALE` | `es` (mensajes por defecto) |
+| `CURRENCYFREAKS_API_KEY` | API key para tipos de cambio fiat/cripto |
+| `APP_BASE_CURRENCY` | Moneda base de almacenamiento (`USD`) |
+| `APP_DEFAULT_CURRENCY` | Moneda por defecto para nuevos usuarios |
+| `EXCHANGE_RATE_SYNC_MIN_HOURS` | Intervalo mínimo entre syncs (horas) |
 
 Ver [.env.example](.env.example) completo.
 

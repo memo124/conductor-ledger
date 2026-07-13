@@ -92,6 +92,8 @@ class UsuariosController extends Controller
             'is_active' => $validated['is_active'],
             'role' => $validated['role'],
             'theme_preference' => 'auto',
+            'locale_preference' => 'es',
+            'currency_preference' => 'USD',
             'email_verified_at' => now(),
             'encrypted_dek' => $keys['encrypted_dek'],
             'admin_wrapped_dek' => $keys['admin_wrapped_dek'],

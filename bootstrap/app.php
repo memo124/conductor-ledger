@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'permission' => \App\Http\Middleware\AuthorizeAppOption::class,
         ]);
+        $middleware->appendToGroup('web', \App\Http\Middleware\SetUserLocale::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

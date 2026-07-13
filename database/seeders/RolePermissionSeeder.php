@@ -28,7 +28,7 @@ class RolePermissionSeeder extends Seeder
         }
 
         $conductorSlugs = [
-            'dashboard', 'viajes', 'gastos', 'vehiculos', 'graficos',
+            'dashboard', 'viajes', 'gastos', 'vehiculos', 'graficos', 'conversor',
             'tipos-propiedad', 'categorias-gasto', 'plataformas', 'tipos-viaje', 'perfil',
         ];
 
