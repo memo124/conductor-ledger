@@ -261,6 +261,31 @@ body.cl-body {
     filter: invert(1) grayscale(100%) brightness(200%);
 }
 
+/* Form wraps modal-body + footer: restore scrollable layout (Bootstrap expects direct children). */
+.modal-dialog-scrollable .cl-modal-content {
+    max-height: 100%;
+    overflow: hidden;
+}
+
+.modal-dialog-scrollable .cl-modal-content > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.modal-dialog-scrollable .cl-modal-content > form .modal-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal-dialog-scrollable .cl-modal-content > form .modal-footer {
+    flex-shrink: 0;
+    background: var(--cl-bg-card);
+}
+
 .table,
 table.dataTable {
     --bs-table-color: var(--cl-text);
