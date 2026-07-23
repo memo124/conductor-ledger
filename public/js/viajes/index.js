@@ -13,7 +13,15 @@ $(function () {
     var $alquiler = $('input[name="alquiler"]');
     var $suggestion = $('#rentalSuggestion');
     var $porcentajeCuota = $('input[name="porcentaje_cuota"]');
-    var todayStr = new Date().toISOString().slice(0, 10);
+
+    function localTodayStr() {
+        var d = new Date();
+        return d.getFullYear() + '-'
+            + String(d.getMonth() + 1).padStart(2, '0') + '-'
+            + String(d.getDate()).padStart(2, '0');
+    }
+
+    var todayStr = localTodayStr();
 
     $('input[name="fecha"]').attr('max', todayStr);
 
@@ -97,6 +105,42 @@ $(function () {
         extra: select2AjaxData()
     });
 
+    var $selectTripClient = $('#selectTripClient');
+    var $selectTripDependent = $('#selectTripDependent');
+    var tripClientHidden = {
+        client_id: $('#inputTripClientId'),
+        client_dependent_id: $('#inputTripClientDependentId'),
+        client_display_name: $('#inputTripClientDisplayName')
+    };
+
+    ConductorLedger.initClientPicker($selectTripClient, {
+        dropdownParent: $modal
+    });
+    ConductorLedger.initDependentPicker($selectTripDependent, $selectTripClient, {
+        dropdownParent: $modal
+    });
+
+    $selectTripClient.add($selectTripDependent).on('change', function () {
+        ConductorLedger.syncClientHiddenFields($selectTripClient, $selectTripDependent, tripClientHidden);
+        var hasLinkedClient = $selectTripClient.val() && String($selectTripClient.val()).indexOf(ConductorLedger.CLIENT_TAG_PREFIX) !== 0 && /^\d+$/.test(String($selectTripClient.val()));
+        $('#fieldClientDependent').toggle(hasLinkedClient);
+    });
+
+    function isMicrobus() {
+        var type = selectedTripType();
+        return type && type.code === 'MICROBUS_RUTA';
+    }
+
+    function syncTripClientHidden() {
+        ConductorLedger.syncClientHiddenFields($selectTripClient, $selectTripDependent, tripClientHidden);
+    }
+
+    function resetTripClientFields() {
+        ConductorLedger.resetClientPicker($selectTripClient, $selectTripDependent);
+        syncTripClientHidden();
+        $('#fieldClientDependent').hide();
+    }
+
     function selectedTripType() {
         var id = parseInt($('#selectTripType').val(), 10);
         return tripTypesById[id] || null;
@@ -167,6 +211,7 @@ $(function () {
     function toggleFormFields() {
         var mode = syncRegistrationMode();
         var plataforma = isPlataforma();
+        var $fecha = $('input[name="fecha"]');
 
         $('#fieldPlatform').toggle(plataforma);
         $('#fieldFecha').toggle(mode !== 'monthly');
@@ -174,9 +219,24 @@ $(function () {
         $('#fieldMontoBruto').toggle(mode === 'daily' || mode === 'monthly');
         $('#fieldComisionApp').toggle(mode === 'daily' || mode === 'monthly');
         $('#fieldMontoCobrado').toggle(mode === 'per_trip');
+        $('#fieldClient').toggle(mode === 'per_trip');
+        $('#clientRequiredMark').toggle(mode === 'per_trip' && isMicrobus());
+
+        if (mode !== 'per_trip') {
+            resetTripClientFields();
+        } else {
+            var hasLinkedClient = $selectTripClient.val() && String($selectTripClient.val()).indexOf(ConductorLedger.CLIENT_TAG_PREFIX) !== 0 && /^\d+$/.test(String($selectTripClient.val()));
+            $('#fieldClientDependent').toggle(hasLinkedClient);
+        }
 
         if (mode === 'monthly') {
+            $fecha.prop('disabled', true);
             updatePeriodMonthOptions();
+        } else {
+            $fecha.prop('disabled', false).attr('max', todayStr);
+            if (!$fecha.val()) {
+                $fecha.val(localTodayStr());
+            }
         }
     }
 
@@ -197,7 +257,7 @@ $(function () {
 
         if (!vehicleId) {
             $alquiler.val(0).prop('readonly', true);
-            $suggestion.text('');
+            $suggestion.text('').removeClass('text-warning');
             return;
         }
 
@@ -212,21 +272,50 @@ $(function () {
         })).done(function (res) {
             if (!res.success) return;
             var data = res.data;
+            var lines = [];
 
             if (typeof data.quota_percentage !== 'undefined' && !$porcentajeCuota.data('user-edited')) {
                 $porcentajeCuota.val(data.quota_percentage);
             }
 
             if (data.alquiler_editable) {
-                $alquiler.prop('readonly', false).val(data.suggested_alquiler.toFixed(2));
-                $suggestion.text(
-                    'Sugerido: ' + ConductorLedger.Money.formatFromBase(data.suggested_alquiler) +
-                    ' (cuota ' + data.rental_period_label + ' ' + ConductorLedger.Money.formatFromBase(data.rental_fee) + ')'
-                );
+                $alquiler.prop('readonly', false).val(Number(data.suggested_alquiler || 0).toFixed(2));
+
+                if (!data.quota_configured) {
+                    lines.push(ConductorLedger.I18n.t('pages.viajes.quota_missing_percent'));
+                } else if (data.base_ingreso <= 0) {
+                    lines.push(ConductorLedger.I18n.t('pages.viajes.quota_missing_income'));
+                } else {
+                    lines.push(ConductorLedger.I18n.t('pages.viajes.quota_suggestion', {
+                        amount: ConductorLedger.Money.formatFromBase(data.suggested_alquiler),
+                        pct: Number(data.percentage_applied || 0).toFixed(2),
+                        base: ConductorLedger.Money.formatFromBase(data.base_ingreso)
+                    }));
+
+                    if (data.period_cap > 0) {
+                        lines.push(ConductorLedger.I18n.t('pages.viajes.quota_period_cap', {
+                            cap: ConductorLedger.Money.formatFromBase(data.period_cap),
+                            period: data.rental_period_label,
+                            fee: ConductorLedger.Money.formatFromBase(data.rental_fee)
+                        }));
+                    }
+                }
+
+                if (data.trip_cap_applied) {
+                    lines.push('<span class="text-warning">' + ConductorLedger.I18n.t('pages.viajes.quota_trip_cap_warning') + '</span>');
+                } else if (data.period_cap_applied) {
+                    lines.push('<span class="text-warning">' + ConductorLedger.I18n.t('pages.viajes.quota_period_cap_warning') + '</span>');
+                } else if (data.reserve_cap_applied) {
+                    lines.push('<span class="text-warning">' + ConductorLedger.I18n.t('pages.viajes.quota_reserve_cap_warning') + '</span>');
+                }
             } else {
                 $alquiler.val(0).prop('readonly', true);
-                $suggestion.text('Vehículo ' + (data.ownership_type || 'propio') + ': la cuota no aplica.');
+                lines.push(ConductorLedger.I18n.t('pages.viajes.quota_not_applicable', {
+                    type: data.ownership_type || 'propio'
+                }));
             }
+
+            $suggestion.html(lines.join('<br>'));
         });
     }
 
@@ -259,10 +348,11 @@ $(function () {
         $btnSubmit.text('Guardar');
         $form[0].reset();
         $('#selectVehicle').val(null).trigger('change');
-        $('input[name="fecha"]').val(new Date().toISOString().slice(0, 10));
+        $('input[name="fecha"]').val(localTodayStr());
         $alquiler.prop('readonly', true).val(0);
         $suggestion.text('');
         $porcentajeCuota.removeData('user-edited');
+        resetTripClientFields();
         updateModeRadios();
         toggleFormFields();
     }
@@ -300,7 +390,7 @@ $(function () {
                 updateModeRadios();
                 toggleFormFields();
 
-                setVehicleOption(trip.vehicle_id, trip.vehicle_plate);
+                setVehicleOption(trip.vehicle_id, trip.vehicle_alias);
                 $('#selectPlatform').val(trip.platform_id || '');
                 $('input[name="fecha"]').val(trip.fecha || '');
                 $('input[name="period_year"]').val(trip.period_year || '');
@@ -311,6 +401,15 @@ $(function () {
                 $('input[name="propina"]').val(trip.propina);
                 $('input[name="alquiler"]').val(trip.alquiler);
                 $porcentajeCuota.val(trip.porcentaje_cuota).data('user-edited', true);
+
+                ConductorLedger.setClientPicker($selectTripClient, $selectTripDependent, {
+                    client_id: trip.client_id,
+                    client_dependent_id: trip.client_dependent_id,
+                    client_display_name: trip.client_display_name,
+                    client_label: trip.client_label
+                });
+                syncTripClientHidden();
+                toggleFormFields();
 
                 updateRentalSuggestion();
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('modalNuevoViaje')).show();
@@ -340,6 +439,12 @@ $(function () {
             { data: 'vehicle' },
             { data: 'trip_type' },
             { data: 'platform' },
+            {
+                data: 'client',
+                render: function (value) {
+                    return value && value !== '—' ? value : '<span class="text-muted">—</span>';
+                }
+            },
             { data: 'registration_mode' },
             $.extend({ data: 'monto_bruto', className: 'text-income' }, ConductorLedger.moneyColumn()),
             $.extend({ data: 'comision_app', className: 'text-expense' }, ConductorLedger.moneyColumn()),
@@ -426,6 +531,21 @@ $(function () {
         }
 
         syncRegistrationMode();
+
+        if (!$('#selectVehicle').val()) {
+            ConductorLedger.showAlert('Seleccione un vehículo.', 'danger');
+            return;
+        }
+
+        syncTripClientHidden();
+
+        if (syncRegistrationMode() === 'per_trip' && isMicrobus()) {
+            var clientData = ConductorLedger.readClientPicker($selectTripClient, $selectTripDependent);
+            if (!clientData.client_id && !clientData.client_display_name) {
+                ConductorLedger.showAlert(ConductorLedger.I18n.t('pages.clientes.client_reference_required'), 'danger');
+                return;
+            }
+        }
 
         var editUuid = $editUuid.val();
         var request;

@@ -46,10 +46,81 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->unsignedInteger('ownership_type_id');
             $table->foreign('ownership_type_id')->references('id')->on('vehicle_ownership_types');
-            $table->string('plate_number', 15);
+            $table->string('alias', 40);
+            $table->string('vehicle_kind', 20)->default('other');
+            $table->string('brand', 60)->nullable();
+            $table->string('model', 60)->nullable();
+            $table->unsignedSmallInteger('model_year')->nullable();
+            $table->string('color', 40)->nullable();
+            $table->text('notes')->nullable();
             $table->decimal('rental_fee_daily', 10, 2)->default(0);
+            $table->string('rental_period', 20)->default('daily');
+            $table->decimal('quota_percentage', 5, 2)->default(0);
+            $table->decimal('quota_reserve_amount', 10, 2)->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+        });
+
+        Schema::create('clients', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('name', 120);
+            $table->string('phone', 30)->nullable();
+            $table->string('email', 150)->nullable();
+            $table->string('address', 255)->nullable();
+            $table->decimal('latitude', 10, 7)->nullable();
+            $table->decimal('longitude', 10, 7)->nullable();
+            $table->text('notes')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('client_dependents', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('client_id')->constrained()->cascadeOnDelete();
+            $table->string('name', 120);
+            $table->string('relationship_label', 50)->nullable();
+            $table->string('phone', 30)->nullable();
+            $table->date('birth_date')->nullable();
+            $table->text('notes')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('microbus_routes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('vehicle_id')->constrained()->cascadeOnDelete();
+            $table->string('name', 100);
+            $table->text('notes')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('microbus_passengers', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('microbus_route_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('client_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('client_dependent_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('display_name', 120)->nullable();
+            $table->decimal('monthly_fee', 10, 2)->default(0);
+            $table->text('pickup_notes')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->timestamps();
+        });
+
+        Schema::create('microbus_passenger_payments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('microbus_passenger_id')->constrained()->cascadeOnDelete();
+            $table->unsignedSmallInteger('period_year');
+            $table->unsignedTinyInteger('period_month');
+            $table->decimal('amount_due', 10, 2)->default(0);
+            $table->boolean('is_paid')->default(false);
+            $table->timestamp('paid_at')->nullable();
+            $table->text('notes')->nullable();
+            $table->timestamps();
+            $table->unique(['microbus_passenger_id', 'period_year', 'period_month'], 'microbus_passenger_payments_unique_period');
         });
 
         Schema::create('user_sessions', function (Blueprint $table) {
@@ -79,6 +150,9 @@ return new class extends Migration
                 vehicle_id BIGINT NOT NULL,
                 trip_type_id INT NOT NULL REFERENCES trip_types(id),
                 platform_id INT NULL REFERENCES platforms(id),
+                client_id BIGINT NULL REFERENCES clients(id),
+                client_dependent_id BIGINT NULL REFERENCES client_dependents(id),
+                client_display_name VARCHAR(120) NULL,
                 registration_mode VARCHAR(10) NOT NULL DEFAULT 'per_trip',
                 period_year INT NULL,
                 period_month INT NULL,
@@ -155,6 +229,11 @@ return new class extends Migration
         DB::statement('DROP TABLE IF EXISTS trips CASCADE');
         Schema::dropIfExists('yearly_counters');
         Schema::dropIfExists('user_sessions');
+        Schema::dropIfExists('microbus_passenger_payments');
+        Schema::dropIfExists('microbus_passengers');
+        Schema::dropIfExists('microbus_routes');
+        Schema::dropIfExists('client_dependents');
+        Schema::dropIfExists('clients');
         Schema::dropIfExists('vehicles');
         DB::statement('DROP TABLE IF EXISTS platforms CASCADE');
         DB::statement('DROP TABLE IF EXISTS trip_types CASCADE');

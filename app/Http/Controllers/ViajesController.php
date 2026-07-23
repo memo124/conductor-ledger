@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\FormatsMoney;
+use App\Http\Controllers\Concerns\ResolvesClientReference;
 use App\Models\Platform;
 use App\Models\Trip;
 use App\Models\TripType;
@@ -26,6 +27,7 @@ use Illuminate\View\View;
 class ViajesController extends Controller
 {
     use FormatsMoney;
+    use ResolvesClientReference;
 
     public function __construct(
         private readonly YearlyCounterService $counterService,
@@ -56,21 +58,10 @@ class ViajesController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'vehicle_id' => ['required', 'integer'],
-            'trip_type_id' => ['required', 'integer', 'exists:trip_types,id'],
-            'registration_mode' => ['required', 'in:per_trip,daily,monthly'],
-            'platform_id' => ['nullable', 'integer', 'exists:platforms,id'],
-            'fecha' => ['required_unless:registration_mode,monthly', 'nullable', 'date', 'before_or_equal:today'],
-            'period_year' => ['required_if:registration_mode,monthly', 'nullable', 'integer', 'min:2000', 'max:2100'],
-            'period_month' => ['required_if:registration_mode,monthly', 'nullable', 'integer', 'min:1', 'max:12'],
-            'monto_bruto' => ['nullable', 'numeric', 'min:0'],
-            'comision_app' => ['nullable', 'numeric', 'min:0'],
-            'monto_cobrado' => ['nullable', 'numeric', 'min:0'],
-            'propina' => ['nullable', 'numeric', 'min:0'],
-            'porcentaje_cuota' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'alquiler' => ['nullable', 'numeric', 'min:0'],
-        ]);
+        $validated = $request->validate(
+            $this->tripFormRules(),
+            $this->tripFormMessages(),
+        );
 
         $userId = Auth::id();
         $tripType = TripType::query()->findOrFail($validated['trip_type_id']);
@@ -156,7 +147,24 @@ class ViajesController extends Controller
 
         $porcentajeCuota = (float) ($validated['porcentaje_cuota'] ?? $vehicle->quota_percentage);
         $alquiler = (float) ($validated['alquiler'] ?? 0);
-        $this->rentalService->validateTripRental($vehicle, $alquiler);
+        $baseIngreso = $this->tripRegistration->baseIngreso($registrationMode, [
+            'monto_bruto' => $montoBruto,
+            'comision_app' => $comisionApp,
+            'monto_cobrado' => $montoCobrado,
+        ]);
+        $this->rentalService->validateTripRental($vehicle, $alquiler, $baseIngreso);
+
+        $clientRef = $registrationMode === 'per_trip'
+            ? $this->resolveClientReference(
+                $request,
+                $userId,
+                $tripType->code === 'MICROBUS_RUTA',
+            )
+            : [
+                'client_id' => null,
+                'client_dependent_id' => null,
+                'client_display_name' => null,
+            ];
 
         $anio = (int) $fecha->format('Y');
 
@@ -170,7 +178,7 @@ class ViajesController extends Controller
             'registration_mode' => $registrationMode,
         ];
 
-        $trip = DB::transaction(function () use ($validated, $userId, $vehicle, $tripType, $fecha, $anio, $amounts, $registrationMode) {
+        $trip = DB::transaction(function () use ($validated, $userId, $vehicle, $tripType, $fecha, $anio, $amounts, $registrationMode, $clientRef) {
             $tripNumber = $this->counterService->nextTripNumber($userId, $anio);
 
             return Trip::query()->create([
@@ -179,6 +187,9 @@ class ViajesController extends Controller
                 'vehicle_id' => $vehicle->id,
                 'trip_type_id' => $tripType->id,
                 'platform_id' => $validated['platform_id'] ?? null,
+                'client_id' => $clientRef['client_id'],
+                'client_dependent_id' => $clientRef['client_dependent_id'],
+                'client_display_name' => $clientRef['client_display_name'],
                 'registration_mode' => $registrationMode,
                 'period_year' => $validated['period_year'] ?? null,
                 'period_month' => $validated['period_month'] ?? null,
@@ -259,14 +270,18 @@ class ViajesController extends Controller
             ->where('user_id', $this->resolveOwnerUserId($request))
             ->where('is_active', true)
             ->with('ownershipType')
-            ->when($search !== '', fn ($q) => $q->where('plate_number', 'ilike', "%{$search}%"))
-            ->orderBy('plate_number')
+            ->when($search !== '', fn ($q) => $q->where(function ($inner) use ($search) {
+                $inner->where('alias', 'ilike', "%{$search}%")
+                    ->orWhere('brand', 'ilike', "%{$search}%")
+                    ->orWhere('model', 'ilike', "%{$search}%");
+            }))
+            ->orderBy('alias')
             ->paginate(15, ['*'], 'page', $page);
 
         return response()->json(Select2Response::fromPaginator($paginator, function (Vehicle $vehicle) {
             return [
                 'id' => $vehicle->id,
-                'text' => $vehicle->plate_number.' — '.($vehicle->ownershipType?->name ?? 'N/A'),
+                'text' => $vehicle->displayLabel().' — '.($vehicle->ownershipType?->name ?? 'N/A'),
             ];
         }));
     }
@@ -307,6 +322,8 @@ class ViajesController extends Controller
         $baseQuery = DB::table('trips as t')
             ->leftJoin('trip_types as tt', 'tt.id', '=', 't.trip_type_id')
             ->leftJoin('platforms as p', 'p.id', '=', 't.platform_id')
+            ->leftJoin('clients as c', 'c.id', '=', 't.client_id')
+            ->leftJoin('client_dependents as cd', 'cd.id', '=', 't.client_dependent_id')
             ->where('t.user_id', $userId)
             ->when($fechaDesde, fn ($q) => $q->where('t.fecha', '>=', $fechaDesde))
             ->when($fechaHasta, fn ($q) => $q->where('t.fecha', '<=', $fechaHasta))
@@ -319,6 +336,9 @@ class ViajesController extends Controller
                     $q->where('t.dia_semana', 'ilike', "%{$search}%")
                         ->orWhere('tt.name', 'ilike', "%{$search}%")
                         ->orWhere('p.name', 'ilike', "%{$search}%")
+                        ->orWhere('t.client_display_name', 'ilike', "%{$search}%")
+                        ->orWhere('c.name', 'ilike', "%{$search}%")
+                        ->orWhere('cd.name', 'ilike', "%{$search}%")
                         ->orWhereRaw('CAST(t.trip_number AS TEXT) ILIKE ?', ["%{$search}%"])
                         ->orWhereRaw('CAST(t.fecha AS TEXT) ILIKE ?', ["%{$search}%"]);
                 });
@@ -328,16 +348,24 @@ class ViajesController extends Controller
         $recordsFiltered = (clone $baseQuery)->count();
 
         $rows = $baseQuery
-            ->select(['t.*', 'tt.name as trip_type_name', 'p.name as platform_name'])
+            ->select([
+                't.*',
+                'tt.name as trip_type_name',
+                'p.name as platform_name',
+                'c.name as client_name',
+                'cd.name as dependent_name',
+                'cd.relationship_label as dependent_relationship',
+            ])
             ->orderByDesc('t.fecha')
             ->orderByDesc('t.trip_number')
             ->offset($start)
             ->limit($length)
             ->get();
 
-        $vehiclePlates = Vehicle::query()
+        $vehicleLabels = Vehicle::query()
             ->where('user_id', $userId)
-            ->pluck('plate_number', 'id');
+            ->get(['id', 'alias', 'brand', 'model'])
+            ->mapWithKeys(fn (Vehicle $vehicle) => [$vehicle->id => $vehicle->displayLabel()]);
 
         $totals = ['ingresos' => 0, 'comision_app' => 0, 'alquiler' => 0, 'neto' => 0];
         $allFiltered = (clone $baseQuery)->select(['t.*'])->get();
@@ -349,7 +377,7 @@ class ViajesController extends Controller
             $totals['neto'] += $this->financialRecords->tripNeto($amounts);
         }
 
-        $data = $rows->map(function ($row) use ($vehiclePlates, $dek) {
+        $data = $rows->map(function ($row) use ($vehicleLabels, $dek) {
             $amounts = $this->financialRecords->decryptTripRow($row, $dek);
             $ingresos = $this->financialRecords->tripIngresos($amounts);
             $neto = $this->financialRecords->tripNeto($amounts);
@@ -359,9 +387,14 @@ class ViajesController extends Controller
                 'trip_number' => $row->trip_number,
                 'fecha' => $row->fecha,
                 'dia_semana' => $row->dia_semana,
-                'vehicle' => $vehiclePlates[$row->vehicle_id] ?? 'N/A',
+                'vehicle' => $vehicleLabels[$row->vehicle_id] ?? 'N/A',
                 'trip_type' => $row->trip_type_name ?? '—',
                 'platform' => $row->platform_name ?? '—',
+                'client' => $this->resolvedClientLabel(
+                    $row->client_id ? (int) $row->client_id : null,
+                    $row->client_dependent_id ? (int) $row->client_dependent_id : null,
+                    $row->client_display_name,
+                ),
                 'registration_mode' => $this->tripRegistration->registrationModeLabel($row->registration_mode),
                 'monto_bruto' => $this->moneyUsd($amounts['monto_bruto']),
                 'comision_app' => $this->moneyUsd($amounts['comision_app']),
@@ -410,9 +443,13 @@ class ViajesController extends Controller
                 'trip_number' => $trip->trip_number,
                 'user_id' => $trip->user_id,
                 'vehicle_id' => $trip->vehicle_id,
-                'vehicle_plate' => $trip->vehicle?->plate_number,
+                'vehicle_alias' => $trip->vehicle?->displayLabel(),
                 'trip_type_id' => $trip->trip_type_id,
                 'platform_id' => $trip->platform_id,
+                'client_id' => $trip->client_id,
+                'client_dependent_id' => $trip->client_dependent_id,
+                'client_display_name' => $trip->client_display_name,
+                'client_label' => $trip->resolvedClientName(),
                 'registration_mode' => $trip->registration_mode,
                 'fecha' => $trip->fecha->format('Y-m-d'),
                 'period_year' => $trip->period_year,
@@ -431,21 +468,10 @@ class ViajesController extends Controller
     {
         $trip = $this->findOwnedTrip($uuid);
 
-        $validated = $request->validate([
-            'vehicle_id' => ['required', 'integer'],
-            'trip_type_id' => ['required', 'integer', 'exists:trip_types,id'],
-            'registration_mode' => ['required', 'in:per_trip,daily,monthly'],
-            'platform_id' => ['nullable', 'integer', 'exists:platforms,id'],
-            'fecha' => ['required_unless:registration_mode,monthly', 'nullable', 'date', 'before_or_equal:today'],
-            'period_year' => ['required_if:registration_mode,monthly', 'nullable', 'integer', 'min:2000', 'max:2100'],
-            'period_month' => ['required_if:registration_mode,monthly', 'nullable', 'integer', 'min:1', 'max:12'],
-            'monto_bruto' => ['nullable', 'numeric', 'min:0'],
-            'comision_app' => ['nullable', 'numeric', 'min:0'],
-            'monto_cobrado' => ['nullable', 'numeric', 'min:0'],
-            'propina' => ['nullable', 'numeric', 'min:0'],
-            'porcentaje_cuota' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'alquiler' => ['nullable', 'numeric', 'min:0'],
-        ]);
+        $validated = $request->validate(
+            $this->tripFormRules(),
+            $this->tripFormMessages(),
+        );
 
         $ownerId = (int) $trip->user_id;
         $tripType = TripType::query()->findOrFail($validated['trip_type_id']);
@@ -495,8 +521,25 @@ class ViajesController extends Controller
         $comisionApp = (float) ($validated['comision_app'] ?? 0);
         $montoCobrado = (float) ($validated['monto_cobrado'] ?? 0);
         $alquiler = (float) ($validated['alquiler'] ?? 0);
+        $baseIngreso = $this->tripRegistration->baseIngreso($registrationMode, [
+            'monto_bruto' => $montoBruto,
+            'comision_app' => $comisionApp,
+            'monto_cobrado' => $montoCobrado,
+        ]);
 
-        $this->rentalService->validateTripRental($vehicle, $alquiler);
+        $this->rentalService->validateTripRental($vehicle, $alquiler, $baseIngreso);
+
+        $clientRef = $registrationMode === 'per_trip'
+            ? $this->resolveClientReference(
+                $request,
+                $ownerId,
+                $tripType->code === 'MICROBUS_RUTA',
+            )
+            : [
+                'client_id' => null,
+                'client_dependent_id' => null,
+                'client_display_name' => null,
+            ];
 
         $amounts = [
             'monto_bruto' => $montoBruto,
@@ -512,6 +555,9 @@ class ViajesController extends Controller
             'vehicle_id' => $vehicle->id,
             'trip_type_id' => $tripType->id,
             'platform_id' => $validated['platform_id'] ?? null,
+            'client_id' => $clientRef['client_id'],
+            'client_dependent_id' => $clientRef['client_dependent_id'],
+            'client_display_name' => $clientRef['client_display_name'],
             'registration_mode' => $registrationMode,
             'period_year' => $validated['period_year'] ?? null,
             'period_month' => $validated['period_month'] ?? null,
@@ -544,9 +590,44 @@ class ViajesController extends Controller
         return (int) Auth::id();
     }
 
+    private function tripFormRules(): array
+    {
+        return [
+            'vehicle_id' => ['required', 'integer'],
+            'trip_type_id' => ['required', 'integer', 'exists:trip_types,id'],
+            'registration_mode' => ['required', 'in:per_trip,daily,monthly'],
+            'platform_id' => ['nullable', 'integer', 'exists:platforms,id'],
+            'fecha' => ['exclude_if:registration_mode,monthly', 'required_unless:registration_mode,monthly', 'nullable', 'date', 'before_or_equal:today'],
+            'period_year' => ['required_if:registration_mode,monthly', 'nullable', 'integer', 'min:2000', 'max:2100'],
+            'period_month' => ['required_if:registration_mode,monthly', 'nullable', 'integer', 'min:1', 'max:12'],
+            'monto_bruto' => ['nullable', 'numeric', 'min:0'],
+            'comision_app' => ['nullable', 'numeric', 'min:0'],
+            'monto_cobrado' => ['nullable', 'numeric', 'min:0'],
+            'propina' => ['nullable', 'numeric', 'min:0'],
+            'porcentaje_cuota' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'alquiler' => ['nullable', 'numeric', 'min:0'],
+            'client_id' => ['nullable', 'integer'],
+            'client_dependent_id' => ['nullable', 'integer'],
+            'client_display_name' => ['nullable', 'string', 'max:120'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function tripFormMessages(): array
+    {
+        return [
+            'fecha.required_unless' => 'La fecha es obligatoria.',
+            'fecha.before_or_equal' => 'No puede registrar viajes con fecha futura.',
+            'period_year.required_if' => 'Indique el año del período.',
+            'period_month.required_if' => 'Indique el mes del período.',
+        ];
+    }
+
     private function findOwnedTrip(string $uuid): Trip
     {
-        $trip = Trip::query()->with('vehicle')->where('uuid', $uuid)->firstOrFail();
+        $trip = Trip::query()->with(['vehicle', 'client', 'dependent'])->where('uuid', $uuid)->firstOrFail();
 
         if ((int) $trip->user_id === (int) Auth::id()) {
             return $trip;

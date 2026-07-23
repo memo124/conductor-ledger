@@ -57,7 +57,43 @@ Leyenda: 🔓 pública · 🔐 requiere login · 👑 requiere admin
 | GET | `/Viajes/GetComparativaMensual` | — |
 | GET | `/Viajes/GetRentalSuggestion` | — |
 | GET | `/Viajes/Select2Paginated` | — |
+| GET | `/Viajes/Select2Platforms` | — |
+| GET | `/Viajes/Show/{uuid}` | — |
 | POST | `/Viajes/Store` | — |
+| PUT | `/Viajes/Update/{uuid}` | — |
+
+### Clientes (permiso `clientes`)
+
+| Método | Ruta | Nombre |
+|--------|------|--------|
+| GET | `/Clientes` | `clientes.index` |
+| GET | `/Clientes/GetDatatableServerSide` | — |
+| GET | `/Clientes/Show/{id}` | — |
+| GET | `/Clientes/Select2Paginated` | — |
+| GET | `/Clientes/Select2Dependents` | — |
+| POST | `/Clientes/Store` | — |
+| PUT | `/Clientes/Update/{id}` | — |
+
+### Rutas microbús (permiso `microbus-rutas`)
+
+| Método | Ruta | Nombre |
+|--------|------|--------|
+| GET | `/Microbus/Rutas` | `microbus-rutas.index` |
+| GET | `/Microbus/Rutas/GetDatatableServerSide` | — |
+| GET | `/Microbus/Rutas/Show/{id}` | — |
+| POST | `/Microbus/Rutas/Store` | — |
+| PUT | `/Microbus/Rutas/Update/{id}` | — |
+| POST | `/Microbus/Rutas/{routeId}/Passengers/Store` | — |
+| PUT | `/Microbus/Rutas/{routeId}/Passengers/Update/{passengerId}` | — |
+| PUT | `/Microbus/Rutas/{routeId}/Passengers/{passengerId}/Payment` | — |
+
+### Conversor (permiso `conversor`)
+
+| Método | Ruta | Nombre |
+|--------|------|--------|
+| GET | `/Conversor` | `conversor.index` |
+| GET | `/Conversor/Convert` | — |
+| GET | `/Conversor/Rates` | — |
 
 ### Gastos
 

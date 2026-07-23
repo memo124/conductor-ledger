@@ -19,7 +19,9 @@
             <thead>
                 <tr>
                     <th>{{ ui('common.id') }}</th>
-                    <th>{{ ui('pages.vehiculos.col_plate') }}</th>
+                    <th>{{ ui('pages.vehiculos.col_alias') }}</th>
+                    <th>{{ ui('pages.vehiculos.col_kind') }}</th>
+                    <th>{{ ui('pages.vehiculos.col_vehicle') }}</th>
                     <th>{{ ui('pages.vehiculos.col_ownership_type') }}</th>
                     <th>{{ ui('pages.vehiculos.col_quota') }}</th>
                     <th>{{ ui('pages.vehiculos.col_period') }}</th>
@@ -32,7 +34,7 @@
 </div>
 
 <div class="modal fade" id="modalVehiculo" tabindex="-1">
-    <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down">
+    <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down modal-lg">
         <div class="modal-content cl-modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalVehiculoTitle">{{ ui('pages.vehiculos.modal_title_create') }}</h5>
@@ -41,13 +43,47 @@
             <form id="formVehiculo" novalidate>
                 <input type="hidden" name="vehicle_id" id="vehicleId">
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">{{ ui('pages.vehiculos.field_plate') }}</label>
-                        <input type="text" name="plate_number" class="form-control" maxlength="15" required>
+                    <div class="row">
+                        <div class="col-12 col-md-6 mb-3">
+                            <label class="form-label">{{ ui('pages.vehiculos.field_alias') }}</label>
+                            <input type="text" name="alias" class="form-control" maxlength="40" required placeholder="{{ ui('pages.vehiculos.field_alias_hint') }}">
+                        </div>
+                        <div class="col-12 col-md-6 mb-3">
+                            <label class="form-label">{{ ui('pages.vehiculos.field_kind') }}</label>
+                            <select name="vehicle_kind" class="form-select" required>
+                                @foreach($vehicleKinds as $code => $value)
+                                    <option value="{{ $code }}">{{ ui('pages.vehiculos.kind_'.$code) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 col-md-4 mb-3">
+                            <label class="form-label">{{ ui('pages.vehiculos.field_brand') }}</label>
+                            <input type="text" name="brand" class="form-control" maxlength="60">
+                        </div>
+                        <div class="col-12 col-md-4 mb-3">
+                            <label class="form-label">{{ ui('pages.vehiculos.field_model') }}</label>
+                            <input type="text" name="model" class="form-control" maxlength="60">
+                        </div>
+                        <div class="col-12 col-md-4 mb-3">
+                            <label class="form-label">{{ ui('pages.vehiculos.field_year') }}</label>
+                            <input type="number" name="model_year" class="form-control" min="1980" max="{{ date('Y') + 1 }}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 col-md-6 mb-3">
+                            <label class="form-label">{{ ui('pages.vehiculos.field_color') }}</label>
+                            <input type="text" name="color" class="form-control" maxlength="40">
+                        </div>
+                        <div class="col-12 col-md-6 mb-3">
+                            <label class="form-label">{{ ui('pages.vehiculos.field_ownership_type') }}</label>
+                            <select name="ownership_type_id" id="selectOwnership" class="form-select" required></select>
+                        </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">{{ ui('pages.vehiculos.field_ownership_type') }}</label>
-                        <select name="ownership_type_id" id="selectOwnership" class="form-select" required></select>
+                        <label class="form-label">{{ ui('pages.vehiculos.field_notes') }}</label>
+                        <textarea name="notes" class="form-control" rows="2" maxlength="2000"></textarea>
                     </div>
                     <div id="rentalFields" style="display:none;">
                         <div class="mb-3">

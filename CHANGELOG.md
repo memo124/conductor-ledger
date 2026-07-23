@@ -11,7 +11,31 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y el p
 
 ---
 
-## [1.3.0] - 2026-07-12
+## [1.4.0] - 2026-07-22
+
+Dominio ampliado: vehículos con alias, cartera de clientes, rutas de microbús, clientes en viajes y cuota sugerida por % del ingreso.
+
+### Added
+- **Vehículos:** campo `alias` (nombre corto) en lugar de placa; tipo, marca, modelo, año, color y notas opcionales.
+- **Cartera de clientes** (`/Clientes`): contactos opcionales, mapa Leaflet, dependientes vinculados.
+- **Rutas microbús** (`/Microbus/Rutas`): pasajeros, cuota mensual y control de pago por periodo.
+- **Clientes en viajes:** selector con cartera o nombre libre; obligatorio en microbús (viaje individual).
+- **Selector reutilizable** `ConductorLedger.initClientPicker` para clientes con tags (nombre sin registrar).
+- Migraciones: `clients`, `client_dependents`, `microbus_*`, campos `client_*` en `trips`.
+- Permisos y menú: `clientes`, `microbus-rutas`.
+
+### Changed
+- Tipos de viaje activos: **PLATAFORMA**, **PERSONAL**, **MICROBUS_RUTA** (escolar/interurbano/internacional inactivos).
+- **Cuota en viajes:** cálculo por `% del ingreso`, tope del periodo (diario/semanal/quincenal/mensual) y tope opcional por viaje; aviso si supera lo ganado (100% del ingreso).
+- Resumen mensual de viajes: validación de `fecha` corregida (`exclude_if` + formulario `novalidate`).
+- Guardado de clientes vía JSON; dependientes con etiquetas visibles.
+
+### Fixed
+- Formulario de clientes no persistía teléfono, correo ni dependientes.
+- Error HTML5 al guardar viaje en modo resumen del mes (campo `fecha` oculto).
+- Sugerencia de cuota en 0 cuando `quota_reserve_amount` era 0 (ahora el % basta).
+
+---
 
 Internacionalización completa (ES/EN), monedas fiat y cripto con tipos de cambio en caché, conversor de monedas y assets frontend locales.
 

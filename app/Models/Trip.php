@@ -19,6 +19,9 @@ class Trip extends Model
         'vehicle_id',
         'trip_type_id',
         'platform_id',
+        'client_id',
+        'client_dependent_id',
+        'client_display_name',
         'registration_mode',
         'period_year',
         'period_month',
@@ -66,5 +69,28 @@ class Trip extends Model
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
+
+    public function dependent(): BelongsTo
+    {
+        return $this->belongsTo(ClientDependent::class, 'client_dependent_id');
+    }
+
+    public function resolvedClientName(): string
+    {
+        if ($this->dependent) {
+            return $this->dependent->name;
+        }
+
+        if ($this->client) {
+            return $this->client->name;
+        }
+
+        return $this->client_display_name ?? '—';
     }
 }

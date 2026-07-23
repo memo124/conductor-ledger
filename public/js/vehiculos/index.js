@@ -99,7 +99,14 @@ $(function () {
         order: [[0, 'desc']],
         columns: [
             { data: 'id' },
-            { data: 'plate_number' },
+            { data: 'alias' },
+            { data: 'vehicle_kind' },
+            {
+                data: null,
+                render: function (row) {
+                    return [row.brand !== '—' ? row.brand : '', row.model !== '—' ? row.model : '', row.model_year !== '—' ? row.model_year : ''].filter(Boolean).join(' ') || '—';
+                }
+            },
             { data: 'ownership_type' },
             { data: 'rental_fee_daily' },
             { data: 'rental_period' },
@@ -120,7 +127,13 @@ $(function () {
 
         $('#modalVehiculoTitle').text('Editar Vehículo');
         $('#vehicleId').val(row.id);
-        $('input[name="plate_number"]').val(row.plate_number);
+        $('input[name="alias"]').val(row.alias);
+        $('select[name="vehicle_kind"]').val(row.vehicle_kind_code);
+        $('input[name="brand"]').val(row.brand_raw || '');
+        $('input[name="model"]').val(row.model_raw || '');
+        $('input[name="model_year"]').val(row.model_year_raw || '');
+        $('input[name="color"]').val(row.color_raw || '');
+        $('textarea[name="notes"]').val(row.notes_raw || '');
         $('select[name="is_active"]').val(row.is_active_bool ? '1' : '0');
 
         var requiresFee = !!(row.ownership_requires_fee || row.ownership_is_rented);

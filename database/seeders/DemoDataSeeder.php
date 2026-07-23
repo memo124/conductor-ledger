@@ -33,7 +33,7 @@ class DemoDataSeeder extends Seeder
         }
 
         $vehicle = Vehicle::query()->firstOrCreate(
-            ['user_id' => $user->id, 'plate_number' => 'P123456'],
+            ['user_id' => $user->id, 'alias' => 'Micro 1', 'vehicle_kind' => 'microbus', 'brand' => 'Toyota', 'model' => 'Coaster'],
             [
                 'ownership_type_id' => $ownership->id,
                 'rental_fee_daily' => 200.00,

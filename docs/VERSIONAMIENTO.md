@@ -44,6 +44,7 @@ cat VERSION
 
 | Versión | Fecha | Resumen |
 |---------|-------|---------|
+| **1.4.0** | 2026-07-22 | Clientes, rutas microbús, alias vehículos, cuota por %, clientes en viajes |
 | **1.3.0** | 2026-07-12 | i18n ES/EN, monedas fiat/cripto, conversor, assets vendor locales |
 | **1.2.1** | 2026-07-12 | Fix respaldos ZIP/SQL, rutas Windows, pg_dump multiplataforma |
 | **1.2.0** | 2026-07-12 | Registro híbrido de viajes, plataformas, tipos de viaje, permisos admin |

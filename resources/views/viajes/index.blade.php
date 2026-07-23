@@ -109,6 +109,7 @@
                     <th>{{ ui('common.vehicle') }}</th>
                     <th>{{ ui('pages.viajes.col_type') }}</th>
                     <th>{{ ui('pages.viajes.filter_platform') }}</th>
+                    <th>{{ ui('pages.viajes.col_client') }}</th>
                     <th>{{ ui('pages.viajes.col_mode') }}</th>
                     <th>{{ ui('pages.viajes.col_gross') }}</th>
                     <th>{{ ui('pages.viajes.col_commission') }}</th>
@@ -131,7 +132,7 @@
                 <h5 class="modal-title">{{ ui('pages.viajes.modal_title') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="formNuevoViaje">
+            <form id="formNuevoViaje" novalidate>
                 <input type="hidden" name="registration_mode" id="inputRegistrationMode" value="daily">
                 <input type="hidden" name="edit_uuid" id="editUuid" value="">
                 <div class="modal-body">
@@ -172,6 +173,21 @@
                                 <option value="{{ $platform->id }}">{{ $platform->name }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <input type="hidden" name="client_id" id="inputTripClientId">
+                    <input type="hidden" name="client_dependent_id" id="inputTripClientDependentId">
+                    <input type="hidden" name="client_display_name" id="inputTripClientDisplayName">
+                    <div class="mb-3" id="fieldClient" style="display:none;">
+                        <label class="form-label">
+                            {{ ui('pages.viajes.field_client') }}
+                            <span class="text-danger" id="clientRequiredMark" style="display:none;">*</span>
+                        </label>
+                        <select id="selectTripClient" class="form-select"></select>
+                        <small class="text-muted d-block mt-1">{{ ui('pages.viajes.client_picker_hint') }}</small>
+                    </div>
+                    <div class="mb-3" id="fieldClientDependent" style="display:none;">
+                        <label class="form-label">{{ ui('pages.viajes.field_dependent') }}</label>
+                        <select id="selectTripDependent" class="form-select"></select>
                     </div>
                     <div class="mb-3" id="fieldFecha">
                         <label class="form-label">{{ ui('common.date') }}</label>
@@ -234,5 +250,6 @@
     window.CL_TRIP_TYPES = @json($tripTypesJson);
 </script>
 <script src="{{ asset('js/common/select2-paginated.js') }}"></script>
+<script src="{{ asset('js/common/client-picker.js') }}"></script>
 <script src="{{ asset('js/viajes/index.js') }}"></script>
 @endpush

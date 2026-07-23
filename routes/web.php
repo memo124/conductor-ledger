@@ -2,13 +2,14 @@
 
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\BackupsController;
+use App\Http\Controllers\ClientesController;
 use App\Http\Controllers\CurrencyConverterController;
 use App\Http\Controllers\CategoriasGastoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmergencyDecryptController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GastosController;
-use App\Http\Controllers\GraficosController;
+use App\Http\Controllers\MicrobusRoutesController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PermisosController;
 use App\Http\Controllers\PlataformasController;
@@ -55,6 +56,27 @@ Route::middleware('auth')->group(function () {
         Route::get('/Conversor', [CurrencyConverterController::class, 'index'])->name('conversor.index');
         Route::get('/Conversor/Convert', [CurrencyConverterController::class, 'convert']);
         Route::get('/Conversor/Rates', [CurrencyConverterController::class, 'rates']);
+    });
+
+    Route::middleware('permission:clientes')->group(function () {
+        Route::get('/Clientes', [ClientesController::class, 'index'])->name('clientes.index');
+        Route::get('/Clientes/GetDatatableServerSide', [ClientesController::class, 'getDatatableServerSide']);
+        Route::get('/Clientes/Show/{id}', [ClientesController::class, 'show']);
+        Route::get('/Clientes/Select2Paginated', [ClientesController::class, 'select2Paginated']);
+        Route::get('/Clientes/Select2Dependents', [ClientesController::class, 'select2Dependents']);
+        Route::post('/Clientes/Store', [ClientesController::class, 'store']);
+        Route::put('/Clientes/Update/{id}', [ClientesController::class, 'update']);
+    });
+
+    Route::middleware('permission:microbus-rutas')->group(function () {
+        Route::get('/Microbus/Rutas', [MicrobusRoutesController::class, 'index'])->name('microbus-rutas.index');
+        Route::get('/Microbus/Rutas/GetDatatableServerSide', [MicrobusRoutesController::class, 'getDatatableServerSide']);
+        Route::get('/Microbus/Rutas/Show/{id}', [MicrobusRoutesController::class, 'show']);
+        Route::post('/Microbus/Rutas/Store', [MicrobusRoutesController::class, 'store']);
+        Route::put('/Microbus/Rutas/Update/{id}', [MicrobusRoutesController::class, 'update']);
+        Route::post('/Microbus/Rutas/{routeId}/Passengers/Store', [MicrobusRoutesController::class, 'storePassenger']);
+        Route::put('/Microbus/Rutas/{routeId}/Passengers/Update/{passengerId}', [MicrobusRoutesController::class, 'updatePassenger']);
+        Route::put('/Microbus/Rutas/{routeId}/Passengers/{passengerId}/Payment', [MicrobusRoutesController::class, 'upsertPayment']);
     });
 
     Route::middleware('permission:dashboard')->group(function () {

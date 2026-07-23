@@ -20,7 +20,9 @@ class VehiculosController extends Controller
 
     public function index(): View
     {
-        return view('vehiculos.index');
+        return view('vehiculos.index', [
+            'vehicleKinds' => Vehicle::kinds(),
+        ]);
     }
 
     public function getDatatableServerSide(Request $request): JsonResponse
@@ -34,31 +36,56 @@ class VehiculosController extends Controller
         $query = Vehicle::query()
             ->with('ownershipType')
             ->where('user_id', $userId)
-            ->when($search !== '', fn ($q) => $q->where('plate_number', 'ilike', "%{$search}%"));
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($inner) use ($search) {
+                    $inner->where('alias', 'ilike', "%{$search}%")
+                        ->orWhere('brand', 'ilike', "%{$search}%")
+                        ->orWhere('model', 'ilike', "%{$search}%")
+                        ->orWhere('color', 'ilike', "%{$search}%");
+                });
+            });
 
         $recordsTotal = Vehicle::query()->where('user_id', $userId)->count();
         $recordsFiltered = (clone $query)->count();
 
         $rows = $query->orderByDesc('id')->offset($start)->limit($length)->get();
 
-        $periodLabels = ['daily' => 'Diario', 'weekly' => 'Semanal', 'biweekly' => 'Quincenal', 'monthly' => 'Mensual'];
+        $periodLabels = [
+            'daily' => ui('pages.vehiculos.period_daily'),
+            'weekly' => ui('pages.vehiculos.period_weekly'),
+            'biweekly' => ui('pages.vehiculos.period_biweekly'),
+            'monthly' => ui('pages.vehiculos.period_monthly'),
+        ];
 
         $data = $rows->map(fn (Vehicle $v) => [
             'id' => $v->id,
-            'plate_number' => $v->plate_number,
+            'alias' => $v->alias,
+            'display_label' => $v->displayLabel(),
+            'vehicle_kind' => ui('pages.vehiculos.kind_'.$v->vehicle_kind),
+            'vehicle_kind_code' => $v->vehicle_kind,
+            'brand' => $v->brand ?? '—',
+            'model' => $v->model ?? '—',
+            'model_year' => $v->model_year ?? '—',
+            'color' => $v->color ?? '—',
+            'brand_raw' => $v->brand,
+            'model_raw' => $v->model,
+            'model_year_raw' => $v->model_year,
+            'color_raw' => $v->color,
+            'notes_raw' => $v->notes,
             'ownership_type' => $v->ownershipType?->name,
             'ownership_type_id' => $v->ownership_type_id,
             'ownership_requires_fee' => $this->rentalService->ownershipRequiresFee($v->ownershipType?->name),
             'ownership_is_rented' => $this->rentalService->ownershipRequiresFee($v->ownershipType?->name),
             'rental_fee_daily' => $this->money((float) $v->rental_fee_daily),
             'rental_fee_raw' => (float) $v->rental_fee_daily,
-            'rental_period' => $periodLabels[$v->rental_period ?? 'daily'] ?? 'Diario',
+            'rental_period' => $periodLabels[$v->rental_period ?? 'daily'] ?? ui('pages.vehiculos.period_daily'),
             'rental_period_code' => $v->rental_period ?? 'daily',
             'quota_percentage' => number_format((float) $v->quota_percentage, 2),
             'quota_percentage_raw' => (float) $v->quota_percentage,
             'quota_reserve_amount' => $this->money((float) $v->quota_reserve_amount),
             'quota_reserve_raw' => (float) $v->quota_reserve_amount,
-            'is_active' => $v->is_active ? 'Activo' : 'Inactivo',
+            'notes' => $v->notes,
+            'is_active' => $v->is_active ? ui('common.active') : ui('common.inactive'),
             'is_active_bool' => $v->is_active,
         ]);
 
@@ -90,14 +117,7 @@ class VehiculosController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'ownership_type_id' => ['required', 'integer', 'exists:vehicle_ownership_types,id'],
-            'plate_number' => ['required', 'string', 'max:15'],
-            'rental_fee_daily' => ['nullable', 'numeric', 'min:0'],
-            'rental_period' => ['nullable', 'in:daily,weekly,biweekly,monthly'],
-            'quota_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'quota_reserve_amount' => ['nullable', 'numeric', 'min:0'],
-        ], $this->validationMessages());
+        $validated = $this->validateVehicle($request);
 
         $ownershipType = VehicleOwnershipType::query()->findOrFail($validated['ownership_type_id']);
         $requiresFee = $this->rentalService->ownershipRequiresFee($ownershipType->name);
@@ -110,20 +130,16 @@ class VehiculosController extends Controller
             $validated = array_merge($validated, $request->only(['rental_fee_daily', 'rental_period']));
         }
 
-        $vehicle = Vehicle::query()->create([
+        $vehicle = Vehicle::query()->create(array_merge($validated, [
             'user_id' => Auth::id(),
-            'ownership_type_id' => $validated['ownership_type_id'],
-            'plate_number' => $validated['plate_number'],
             'rental_fee_daily' => $requiresFee ? ($validated['rental_fee_daily'] ?? 0) : 0,
             'rental_period' => $requiresFee ? ($validated['rental_period'] ?? 'daily') : 'daily',
-            'quota_percentage' => (float) ($validated['quota_percentage'] ?? 0),
-            'quota_reserve_amount' => (float) ($validated['quota_reserve_amount'] ?? 0),
             'is_active' => true,
-        ]);
+        ]));
 
         return response()->json([
             'success' => true,
-            'message' => 'Vehículo registrado.',
+            'message' => ui('pages.vehiculos.saved'),
             'data' => $vehicle->load('ownershipType'),
         ]);
     }
@@ -136,15 +152,8 @@ class VehiculosController extends Controller
 
         $this->normalizeBooleanFields($request, ['is_active']);
 
-        $validated = $request->validate([
-            'ownership_type_id' => ['required', 'integer', 'exists:vehicle_ownership_types,id'],
-            'plate_number' => ['required', 'string', 'max:15'],
-            'rental_fee_daily' => ['nullable', 'numeric', 'min:0'],
-            'rental_period' => ['nullable', 'in:daily,weekly,biweekly,monthly'],
-            'quota_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'quota_reserve_amount' => ['nullable', 'numeric', 'min:0'],
-            'is_active' => ['required', 'boolean'],
-        ], $this->validationMessages());
+        $validated = $this->validateVehicle($request);
+        $validated['is_active'] = (bool) $request->input('is_active');
 
         $ownershipType = VehicleOwnershipType::query()->findOrFail($validated['ownership_type_id']);
         $requiresFee = $this->rentalService->ownershipRequiresFee($ownershipType->name);
@@ -157,21 +166,34 @@ class VehiculosController extends Controller
             $validated = array_merge($validated, $request->only(['rental_fee_daily', 'rental_period']));
         }
 
-        $vehicle->update([
-            'ownership_type_id' => $validated['ownership_type_id'],
-            'plate_number' => $validated['plate_number'],
+        $vehicle->update(array_merge($validated, [
             'rental_fee_daily' => $requiresFee ? ($validated['rental_fee_daily'] ?? 0) : 0,
             'rental_period' => $requiresFee ? ($validated['rental_period'] ?? 'daily') : 'daily',
-            'quota_percentage' => (float) ($validated['quota_percentage'] ?? 0),
-            'quota_reserve_amount' => (float) ($validated['quota_reserve_amount'] ?? 0),
-            'is_active' => $validated['is_active'],
-        ]);
+        ]));
 
         return response()->json([
             'success' => true,
-            'message' => 'Vehículo actualizado.',
+            'message' => ui('pages.vehiculos.updated'),
             'data' => $vehicle->fresh('ownershipType'),
         ]);
+    }
+
+    private function validateVehicle(Request $request): array
+    {
+        return $request->validate([
+            'ownership_type_id' => ['required', 'integer', 'exists:vehicle_ownership_types,id'],
+            'alias' => ['required', 'string', 'max:40'],
+            'vehicle_kind' => ['required', 'in:'.implode(',', array_keys(Vehicle::kinds()))],
+            'brand' => ['nullable', 'string', 'max:60'],
+            'model' => ['nullable', 'string', 'max:60'],
+            'model_year' => ['nullable', 'integer', 'min:1980', 'max:'.(date('Y') + 1)],
+            'color' => ['nullable', 'string', 'max:40'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'rental_fee_daily' => ['nullable', 'numeric', 'min:0'],
+            'rental_period' => ['nullable', 'in:daily,weekly,biweekly,monthly'],
+            'quota_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'quota_reserve_amount' => ['nullable', 'numeric', 'min:0'],
+        ], $this->validationMessages());
     }
 
     private function normalizeBooleanFields(Request $request, array $fields): void
@@ -194,14 +216,13 @@ class VehiculosController extends Controller
     private function validationMessages(): array
     {
         return [
-            'ownership_type_id.required' => 'Seleccione el tipo de propiedad.',
-            'plate_number.required' => 'La placa es obligatoria.',
-            'rental_fee_daily.required' => 'Ingrese la cuota.',
-            'rental_fee_daily.min' => 'La cuota debe ser mayor a 0.',
-            'rental_period.required' => 'Seleccione el periodo de pago.',
-            'rental_period.in' => 'El periodo de pago no es válido.',
-            'is_active.required' => 'Seleccione el estado del vehículo.',
-            'is_active.boolean' => 'El estado debe ser Activo o Inactivo.',
+            'ownership_type_id.required' => ui('pages.vehiculos.validation_ownership'),
+            'alias.required' => ui('pages.vehiculos.validation_alias'),
+            'rental_fee_daily.required' => ui('pages.vehiculos.validation_quota'),
+            'rental_fee_daily.min' => ui('pages.vehiculos.validation_quota_min'),
+            'rental_period.required' => ui('pages.vehiculos.validation_period'),
+            'rental_period.in' => ui('pages.vehiculos.validation_period_invalid'),
+            'is_active.required' => ui('pages.vehiculos.validation_status'),
         ];
     }
 }

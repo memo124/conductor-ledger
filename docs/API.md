@@ -161,15 +161,25 @@ Genera números correlativos por usuario y año con bloqueo pesimista (`lockForU
 
 ### VehicleRentalService
 
-Lógica de alquiler según tipo de propiedad del vehículo.
+Lógica de cuota/alquiler según tipo de propiedad (`ALQUILADO`, `FINANCIADO`).
 
 | Método | Descripción |
 |--------|-------------|
-| `isRentedVehicle($vehicle)` | `true` si el tipo es `ALQUILADO`. |
-| `suggestDailyRental($vehicle, $fecha)` | Prorratea cuota: diaria = fee, semanal = fee/7, mensual = fee/días del mes. |
-| `rentalPeriodLabel($vehicle)` | Etiqueta legible: diario, semanal o mensual. |
-| `validateTripRental($vehicle, $alquiler)` | Lanza error si un vehículo no alquilado tiene alquiler > 0. |
-| `vehicleMeta($vehicle, $fecha)` | Paquete completo para el frontend (sugerencia, editabilidad, etc.). |
+| `isRentedVehicle($vehicle)` | `true` si el tipo exige cuota periódica. |
+| `suggestDailyRental($vehicle, $fecha)` | Prorrateo diario según periodo: diario, semanal (/7), quincenal (/14), mensual (/días del mes). |
+| `suggestMonthlyRental($vehicle)` | Tope del periodo en resumen mensual. |
+| `buildTripRentalSuggestion(...)` | Calcula apartado: `% del ingreso`, tope del periodo, tope opcional por viaje y 100% del ingreso si aplica. |
+| `validateTripRental($vehicle, $alquiler, $baseIngreso)` | Valida alquiler en vehículos alquilados/financiados y que no supere el ingreso del viaje. |
+| `vehicleMeta(...)` | Paquete para el frontend: sugerencia, % aplicado, topes y flags de aviso. |
+
+### ClientesController / MicrobusRoutesController
+
+| Controlador | Descripción |
+|-------------|-------------|
+| `ClientesController` | CRUD de cartera, dependientes, Select2 y ubicación opcional. |
+| `MicrobusRoutesController` | Rutas, pasajeros (cliente o nombre libre), pagos mensuales por pasajero. |
+
+Viajes aceptan `client_id`, `client_dependent_id` y `client_display_name` (obligatorio cliente en microbús individual).
 
 ### Select2Response
 

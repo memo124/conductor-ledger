@@ -156,6 +156,35 @@ const APLICATIVO_API = {
         PUT: {
             UPDATE: '/Administracion/Permisos/Update'
         }
+    },
+    CLIENTES: {
+        GET: {
+            DATATABLE: '/Clientes/GetDatatableServerSide',
+            SHOW: '/Clientes/Show',
+            SELECT2: '/Clientes/Select2Paginated',
+            SELECT2_DEPENDENTS: '/Clientes/Select2Dependents'
+        },
+        POST: {
+            STORE: '/Clientes/Store'
+        },
+        PUT: {
+            UPDATE: '/Clientes/Update'
+        }
+    },
+    MICROBUS_RUTAS: {
+        GET: {
+            DATATABLE: '/Microbus/Rutas/GetDatatableServerSide',
+            SHOW: '/Microbus/Rutas/Show'
+        },
+        POST: {
+            STORE: '/Microbus/Rutas/Store',
+            PASSENGER_STORE: '/Microbus/Rutas'
+        },
+        PUT: {
+            UPDATE: '/Microbus/Rutas/Update',
+            PASSENGER_UPDATE: '/Microbus/Rutas',
+            PASSENGER_PAYMENT: '/Microbus/Rutas'
+        }
     }
 };
 window.APLICATIVO_API = APLICATIVO_API;

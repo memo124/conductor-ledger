@@ -55,13 +55,17 @@ class GastosController extends Controller
         $paginator = Vehicle::query()
             ->where('user_id', Auth::id())
             ->where('is_active', true)
-            ->when($search !== '', fn ($q) => $q->where('plate_number', 'ilike', "%{$search}%"))
-            ->orderBy('plate_number')
+            ->when($search !== '', fn ($q) => $q->where(function ($inner) use ($search) {
+                $inner->where('alias', 'ilike', "%{$search}%")
+                    ->orWhere('brand', 'ilike', "%{$search}%")
+                    ->orWhere('model', 'ilike', "%{$search}%");
+            }))
+            ->orderBy('alias')
             ->paginate(15, ['*'], 'page', $page);
 
         return response()->json(Select2Response::fromPaginator($paginator, fn ($vehicle) => [
             'id' => $vehicle->id,
-            'text' => $vehicle->plate_number,
+            'text' => $vehicle->displayLabel(),
         ]));
     }
 
@@ -141,7 +145,9 @@ class GastosController extends Controller
                 'e.descripcion',
                 'e.encrypted_payload',
                 'e.encryption_version',
-                'v.plate_number',
+                'v.alias as vehicle_alias',
+                'v.brand as vehicle_brand',
+                'v.model as vehicle_model',
             ])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -191,7 +197,7 @@ class GastosController extends Controller
                 'expense_number' => $row->expense_number,
                 'fecha' => $row->fecha,
                 'categoria' => $row->categoria,
-                'vehicle' => $row->plate_number ?? '—',
+                'vehicle' => trim(collect([$row->vehicle_alias, $row->vehicle_brand, $row->vehicle_model])->filter()->implode(' · ')) ?: '—',
                 'monto' => $this->moneyUsd($amounts['monto']),
                 'descripcion' => $amounts['descripcion'] ?? '—',
             ];

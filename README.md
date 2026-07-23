@@ -1,6 +1,6 @@
 # ConductorLedger
 
-![Versión](https://img.shields.io/badge/versión-1.3.0-blue)
+![Versión](https://img.shields.io/badge/versión-1.4.0-blue)
 ![Laravel](https://img.shields.io/badge/Laravel-12-red)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-777)
 
@@ -10,7 +10,10 @@ Sistema web para que conductores de plataformas (InDrive, etc.) lleven el contro
 
 - Registra **viajes** con ingresos por plataforma, propinas y costo de alquiler del vehículo.
 - Registra **gastos** por categoría (gasolina, mantenimiento, etc.).
-- Administra **vehículos** con tipo de propiedad (propio, alquilado, financiado).
+- Administra **vehículos** con alias, tipo de propiedad (propio, alquilado, financiado) y cuota por periodo.
+- **Cartera de clientes** con contacto opcional, ubicación en mapa y dependientes.
+- **Rutas microbús** con pasajeros, cuota mensual y registro de pagos por mes.
+- Registra **viajes** con cliente opcional (obligatorio en microbús individual) desde cartera o nombre libre.
 - Muestra un **dashboard** con resumen del mes y comparativa mensual.
 - Genera **gráficos** anuales de ingresos, gastos y ganancia neta.
 - **Exporta** viajes, gastos y resumen en CSV o PDF.
@@ -28,6 +31,7 @@ Sistema web para que conductores de plataformas (InDrive, etc.) lleven el contro
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.4.0** | 2026-07-22 | Clientes, rutas microbús, alias vehículos, cuota por %, clientes en viajes |
 | **1.3.0** | 2026-07-12 | i18n ES/EN, monedas fiat/cripto, conversor, assets vendor locales |
 | **1.2.1** | 2026-07-12 | Fix respaldos ZIP/SQL, rutas Windows, pg_dump multiplataforma |
 | **1.2.0** | 2026-07-12 | Registro híbrido de viajes, plataformas, tipos de viaje, permisos admin |
